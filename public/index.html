@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Банк Стамонийской Федерации</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080C09;--surface:#111A12;--surface-2:#18231A;--line:#26332A;--line-soft:#1C2820;
+  --green:#3DBE38;--text:#EDF3EC;--muted:#8B9C8C;--alarm:#FF6B5E;--gold:#E3C35A;
+  --r:16px;--f:"Manrope",system-ui,"Segoe UI",Arial,sans-serif;--m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f);line-height:1.55;
+  background-image:radial-gradient(900px 520px at 80% -10%,rgba(61,190,56,.16),transparent 62%),
+                   radial-gradient(700px 420px at 2% 4%,rgba(46,155,44,.07),transparent 60%);
+  background-attachment:fixed;-webkit-text-size-adjust:100%}
+::selection{background:var(--green);color:#061206}
+header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(8,12,9,.84);border-bottom:1px solid var(--line-soft)}
+.hbar{max-width:1080px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;gap:13px}
+.flag{width:36px;height:24px;border-radius:4px;flex:none;box-shadow:0 0 0 1px var(--line)}
+.hname{font-weight:800;font-size:15.5px;line-height:1.2}
+.hsub{font-family:var(--m);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em}
+.hact{margin-left:auto;display:flex;gap:8px}
+.tbtn{font:inherit;font-size:13px;background:transparent;border:1px solid var(--line);color:var(--muted);
+  border-radius:10px;padding:8px 13px;cursor:pointer;transition:.15s}
+.tbtn:hover{color:var(--text);border-color:#39513C}
+.tbtn.on{color:var(--green);border-color:var(--green);background:rgba(61,190,56,.09)}
+main{max-width:1080px;margin:0 auto;padding:30px 20px 80px}
+.view{display:none}.view.on{display:block;animation:fade .3s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:clamp(28px,5vw,46px);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin:14px 0 12px;max-width:16ch}
+h1 em{font-style:normal;color:var(--green)}
+.lede{color:var(--muted);font-size:16.5px;max-width:54ch;margin:0 0 26px}
+.card-box{background:linear-gradient(180deg,var(--surface),rgba(17,26,18,.55));border:1px solid var(--line);
+  border-radius:var(--r);padding:22px;margin-bottom:16px}
+.card-box h2{font-size:17px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+.card-box .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.row{display:grid;gap:13px;grid-template-columns:1fr 1fr}
+.row .wide{grid-column:1/-1}
+label.lbl{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select{width:100%;font:inherit;font-size:15px;color:var(--text);background:var(--surface-2);
+  border:1px solid var(--line);border-radius:10px;padding:12px 13px;outline:0;transition:.15s}
+input::placeholder{color:#5A6A5C}
+input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(61,190,56,.16)}
+input.pin{font-family:var(--m);letter-spacing:.4em}
+.btn{font:inherit;font-weight:800;font-size:15px;background:var(--green);color:#06120E;border:0;
+  border-radius:11px;padding:14px 20px;cursor:pointer;transition:.12s;width:100%}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.986)}
+.btn:disabled{background:#2C3A2D;color:#7B8B7C;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:600;font-size:14px}
+.btn.ghost:hover{color:var(--text);border-color:#39513C;filter:none}
+.msg{font-size:13.5px;margin:12px 0 0;min-height:19px}
+.msg.err{color:var(--alarm)}.msg.ok{color:var(--green)}
+.plastic{position:relative;border-radius:18px;padding:22px;overflow:hidden;aspect-ratio:1.62;max-width:420px;
+  background:linear-gradient(145deg,#1E4A1C 0%,#0E1A0F 55%,#060906 100%);
+  border:1px solid rgba(61,190,56,.35);box-shadow:0 22px 50px -22px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.07);
+  display:flex;flex-direction:column;justify-content:space-between}
+.plastic::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.09) 47%,transparent 58%);
+  transform:translateX(-30%);transition:transform .7s ease}
+.plastic:hover::before{transform:translateX(30%)}
+.plastic::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(61,190,56,.28),transparent 65%)}
+.pl-top{display:flex;align-items:flex-start;gap:12px;position:relative;z-index:2}
+.pl-top .bank{font-weight:800;font-size:14.5px}
+.pl-top .kind{font-family:var(--m);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
+.pl-flag{width:30px;height:20px;border-radius:3px;margin-left:auto;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+.chip{width:42px;height:31px;border-radius:6px;position:relative;z-index:2;
+  background:linear-gradient(140deg,#E3C35A,#8A6F1E);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.chip i{position:absolute;left:0;right:0;top:33%;height:1px;background:rgba(0,0,0,.35)}
+.chip i+i{top:66%}
+.pl-num{font-family:var(--m);font-size:clamp(16px,4.4vw,21px);letter-spacing:.14em;position:relative;z-index:2}
+.pl-bot{display:flex;align-items:flex-end;gap:14px;position:relative;z-index:2}
+.pl-bot .who{min-width:0}
+.pl-bot .lab{font-family:var(--m);font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.15em}
+.pl-bot .val{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-bot .bal{margin-left:auto;text-align:right}
+.pl-bot .bal b{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.pl-bot .bal small{font-family:var(--m);font-size:11px;color:var(--muted);display:block}
+.blocked-tag{position:absolute;inset:0;background:rgba(6,10,6,.72);z-index:3;display:grid;place-items:center;
+  font-family:var(--m);font-size:13px;letter-spacing:.2em;color:var(--alarm);text-transform:uppercase}
+.wallet{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.bal-card{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:15px 16px}
+.bal-card .cur{font-family:var(--m);font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted)}
+.bal-card .amt{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:2px}
+.bal-card.alt .amt{color:var(--gold)}.bal-card.mon .amt{color:var(--green)}
+.sync{display:flex;align-items:center;gap:7px;font-family:var(--m);font-size:11px;color:var(--muted);margin-top:12px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--green);display:block;animation:blink 2.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 14px}
+.tab{font:inherit;font-size:14px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+  border-radius:999px;padding:9px 16px;cursor:pointer;transition:.15s}
+.tab:hover{border-color:#39513C;color:var(--text)}
+.tab.on{background:var(--green);border-color:var(--green);color:#06120E;font-weight:700}
+.pane{display:none}.pane.on{display:block}
+.hint{font-size:13px;color:var(--muted);margin:9px 0 0}
+.rate{font-family:var(--m);font-size:12px;color:var(--gold)}
+.op{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+.op:last-child{border-bottom:0}
+.op .ic{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:15px;
+  background:var(--surface-2);border:1px solid var(--line)}
+.op .t{flex:1;min-width:0}
+.op .t b{display:block;font-size:14.5px;font-weight:600}
+.op .t span{font-size:12.5px;color:var(--muted)}
+.op .a{font-family:var(--m);font-size:14px;font-weight:700;white-space:nowrap}
+.op .a.plus{color:var(--green)}.op .a.minus{color:var(--alarm)}
+.empty{color:#5A6A5C;font-size:14px;padding:14px 0}
+.tre-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);
+  text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid var(--line-soft)}
+td.num{font-family:var(--m);font-size:12.5px;color:var(--muted)}
+td.mon{font-family:var(--m);color:var(--green);font-weight:700}
+td.alt{font-family:var(--m);color:var(--gold);font-weight:700}
+.mini{font:inherit;font-size:12px;background:transparent;border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:5px 9px;cursor:pointer}
+.mini:hover{color:var(--text);border-color:#39513C}
+.wrap-x{overflow-x:auto}
+footer{border-top:1px solid var(--line-soft);padding:20px}
+.fbar{max-width:1080px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;
+  font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted)}
+@media(max-width:720px){.row,.wallet,.tre-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <svg class="flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#060606"/><rect width="30" height="13.4" fill="#fff"/><rect width="30" height="6.7" fill="#2E9B2C"/></svg>
+    <div><div class="hname">Банк Стамонии</div><div class="hsub">Государственный банк СФ</div></div>
+    <div class="hact">
+      <button class="tbtn" id="navCard">Моя карта</button>
+      <button class="tbtn" id="navTre">Казна</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="view on" id="vLogin">
+  <h1>Карта <em>гражданина</em> Стамонии</h1>
+  <p class="lede">Один счёт на игрока: МОНы и Алтын, переводы другим игрокам, оплата налогов. Балансы общие — что видите вы, видят и остальные.</p>
+  <div class="row">
+    <div class="card-box">
+      <h2>Войти в карту</h2>
+      <p class="sub">Ник и ПИН, который вы задали при открытии.</p>
+      <div style="display:grid;gap:12px">
+        <div><label class="lbl" for="lNick">Ник</label><input type="text" id="lNick" maxlength="32" autocomplete="off" placeholder="Steve"></div>
+        <div><label class="lbl" for="lPin">ПИН · 4 цифры</label><input type="password" id="lPin" class="pin" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+        <button class="btn" id="doLogin">Войти</button>
+      </div>
+      <p class="msg" id="mLogin"></p>
+    </div>
+    <div class="card-box">
+      <h2>Открыть карту</h2>
+      <p class="sub">Бесплатно. Стартовый баланс — 0, деньги начисляет казна.</p>
+      <div style="display:grid;gap:12px">
+        <div><label class="lbl" for="rNick">Ник в Minecraft</label><input type="text" id="rNick" maxlength="32" autocomplete="off" placeholder="Steve"></div>
+        <div><label class="lbl" for="rDis">Discord</label><input type="text" id="rDis" maxlength="40" autocomplete="off" placeholder="username"></div>
+        <div><label class="lbl" for="rPin">Придумайте ПИН · 4 цифры</label><input type="password" id="rPin" class="pin" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+        <button class="btn" id="doReg">Открыть карту</button>
+      </div>
+      <p class="msg" id="mReg"></p>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="vCard">
+  <div class="row" style="align-items:start">
+    <div>
+      <div class="plastic" id="plastic">
+        <div class="pl-top">
+          <div><div class="bank">БАНК СТАМОНИИ</div><div class="kind">Дебетовая · МОН / АЛТ</div></div>
+          <svg class="pl-flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#060606"/><rect width="30" height="13.4" fill="#fff"/><rect width="30" height="6.7" fill="#2E9B2C"/></svg>
+        </div>
+        <div class="chip"><i></i><i></i></div>
+        <div class="pl-num" id="plNum">СФ 0000 0000</div>
+        <div class="pl-bot">
+          <div class="who"><div class="lab">Владелец</div><div class="val" id="plNick">—</div></div>
+          <div class="bal"><b id="plMon">0</b><small>МОН</small></div>
+        </div>
+      </div>
+      <div class="wallet">
+        <div class="bal-card mon"><div class="cur">МОН</div><div class="amt" id="balMon">0</div></div>
+        <div class="bal-card alt"><div class="cur">Алтын</div><div class="amt" id="balAlt">0</div></div>
+      </div>
+      <div class="sync"><i></i><span id="syncTxt">синхронизировано</span></div>
+      <button class="btn ghost" style="margin-top:12px" id="doLogout">Выйти из карты</button>
+    </div>
+
+    <div>
+      <div class="tabs">
+        <button class="tab on" data-pane="pSend">Перевод</button>
+        <button class="tab" data-pane="pTax">Налоги</button>
+        <button class="tab" data-pane="pEx">Обмен</button>
+        <button class="tab" data-pane="pLog">История</button>
+      </div>
+
+      <div class="card-box">
+        <div class="pane on" id="pSend">
+          <h2>Перевести другому игроку</h2>
+          <p class="sub">По нику или номеру карты. Деньги приходят мгновенно.</p>
+          <div style="display:grid;gap:12px">
+            <div><label class="lbl" for="tTo">Кому</label><input type="text" id="tTo" maxlength="32" placeholder="ник или СФ 1234 5678"></div>
+            <div class="row">
+              <div><label class="lbl" for="tCur">Валюта</label><select id="tCur"><option value="mon">МОН</option><option value="alt">Алтын</option></select></div>
+              <div><label class="lbl" for="tAmt">Сумма</label><input type="number" id="tAmt" min="1" step="1" placeholder="0"></div>
+            </div>
+            <div><label class="lbl" for="tMsg">За что</label><input type="text" id="tMsg" maxlength="60" placeholder="например: за 2 стака железа"></div>
+            <button class="btn" id="doSend">Перевести</button>
+          </div>
+          <p class="msg" id="mSend"></p>
+        </div>
+
+        <div class="pane" id="pTax">
+          <h2>Оплатить налог</h2>
+          <p class="sub">Сумму и номер возьмите из квитанции налоговой службы.</p>
+          <div style="display:grid;gap:12px">
+            <div><label class="lbl" for="xNo">Номер квитанции</label><input type="text" id="xNo" maxlength="24" placeholder="НС-202607-1234"></div>
+            <div><label class="lbl" for="xAmt">Сумма в МОН</label><input type="number" id="xAmt" min="1" step="1" placeholder="0"></div>
+            <button class="btn" id="doTax">Оплатить в казну</button>
+          </div>
+          <p class="hint">Налоговая получит подтверждение в Discord, а в истории карты останется чек.</p>
+          <p class="msg" id="mTax"></p>
+        </div>
+
+        <div class="pane" id="pEx">
+          <h2>Обмен валют</h2>
+          <p class="sub">Курс банка: <span class="rate" id="rateTxt"></span></p>
+          <div style="display:grid;gap:12px">
+            <div><label class="lbl" for="eDir">Направление</label>
+              <select id="eDir"><option value="m2a">МОН → Алтын</option><option value="a2m">Алтын → МОН</option></select></div>
+            <div><label class="lbl" for="eAmt">Сколько меняем</label><input type="number" id="eAmt" min="1" step="1" placeholder="0"></div>
+            <button class="btn" id="doEx">Обменять</button>
+          </div>
+          <p class="hint" id="exPreview">Получите: —</p>
+          <p class="msg" id="mEx"></p>
+        </div>
+
+        <div class="pane" id="pLog">
+          <h2>История операций</h2>
+          <p class="sub">Последние 30 движений по карте.</p>
+          <div id="logList"><p class="empty">Операций пока нет.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="vTre">
+  <h1>Казна <em>Федерации</em></h1>
+  <p class="lede">Начисляйте МОНы и Алтын на карты, списывайте штрафы, блокируйте карты нарушителей.</p>
+
+  <div class="card-box" id="treLock">
+    <h2>Вход для казначея</h2>
+    <p class="sub">Код хранится на сервере, в коде страницы его нет.</p>
+    <div class="row">
+      <div><label class="lbl" for="tCode">Код доступа</label><input type="password" id="tCode" placeholder="••••••••"></div>
+      <div style="display:flex;align-items:flex-end"><button class="btn" id="doTre">Открыть казну</button></div>
+    </div>
+    <p class="msg" id="mTre"></p>
+  </div>
+
+  <div id="treBody" style="display:none">
+    <div class="tre-grid">
+      <div class="bal-card mon"><div class="cur">В обращении · МОН</div><div class="amt" id="totMon">0</div></div>
+      <div class="bal-card alt"><div class="cur">В обращении · Алтын</div><div class="amt" id="totAlt">0</div></div>
+    </div>
+
+    <div class="card-box">
+      <h2>Начислить или списать</h2>
+      <p class="sub">Плюс — эмиссия на карту, минус — штраф в пользу казны.</p>
+      <div class="row">
+        <div><label class="lbl" for="aNick">Карта игрока</label><input type="text" id="aNick" maxlength="32" placeholder="ник или номер карты"></div>
+        <div><label class="lbl" for="aCur">Валюта</label><select id="aCur"><option value="mon">МОН</option><option value="alt">Алтын</option></select></div>
+        <div><label class="lbl" for="aAmt">Сумма · минус для списания</label><input type="number" id="aAmt" step="1" placeholder="100"></div>
+        <div><label class="lbl" for="aWhy">Основание</label><input type="text" id="aWhy" maxlength="60" placeholder="зарплата за неделю"></div>
+      </div>
+      <button class="btn" style="margin-top:13px" id="doIssue">Провести операцию</button>
+      <p class="msg" id="mIssue"></p>
+    </div>
+
+    <div class="card-box">
+      <h2>Все карты</h2>
+      <p class="sub">Счета граждан Федерации. Обновляется каждые 10 секунд.</p>
+      <div class="wrap-x"><table>
+        <thead><tr><th>Игрок</th><th>Карта</th><th>МОН</th><th>Алтын</th><th></th></tr></thead>
+        <tbody id="cardRows"></tbody>
+      </table></div>
+      <p class="empty" id="noCards">Карт пока нет.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="fbar">
+  <span>Государственный банк · Стамонийская Федерация</span>
+  <span>Общая база · Netlify Blobs</span>
+  <span>Операции дублируются в Discord</span>
+</div></footer>
+
+<script>
+const RATE=8;                 // должен совпадать с RATE в netlify/functions/bank.mjs
+const $=id=>document.getElementById(id);
+let auth=null, card=null, treCode=null, timer=null, treTimer=null;
+
+async function api(action,data){
+  let r;
+  try{
+    r=await fetch("/api/bank",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(Object.assign({action},data))});
+  }catch(_){throw new Error("Нет связи с банком. Проверьте интернет.")}
+  let j={};try{j=await r.json()}catch(_){}
+  if(!r.ok)throw new Error(j.error||"Банк вернул ошибку "+r.status);
+  return j;
+}
+const money=n=>Number(n).toLocaleString("ru-RU");
+function say(el,m,c){el.className="msg "+(c||"");el.textContent=m}
+function show(v){["vLogin","vCard","vTre"].forEach(x=>$(x).classList.toggle("on",x===v));mark()}
+function mark(){
+  $("navCard").classList.toggle("on",$("vCard").classList.contains("on")||$("vLogin").classList.contains("on"));
+  $("navTre").classList.toggle("on",$("vTre").classList.contains("on"));
+}
+$("navCard").onclick=()=>show(auth?"vCard":"vLogin");
+$("navTre").onclick=()=>show("vTre");
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id===t.dataset.pane));
+});
+$("rateTxt").textContent="1 МОН = "+RATE+" Алтын";
+
+/* — вход — */
+$("doReg").onclick=async()=>{
+  const m=$("mReg"),b=$("doReg");b.disabled=true;say(m,"Открываем счёт…");
+  try{
+    const nick=$("rNick").value.trim(),pin=$("rPin").value.trim();
+    const j=await api("register",{nick,dis:$("rDis").value.trim(),pin});
+    auth={nick,pin};card=j.card;say(m,"","");enter();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+$("doLogin").onclick=async()=>{
+  const m=$("mLogin"),b=$("doLogin");b.disabled=true;say(m,"Проверяем ПИН…");
+  try{
+    const nick=$("lNick").value.trim(),pin=$("lPin").value.trim();
+    const j=await api("login",{nick,pin});
+    auth={nick,pin};card=j.card;say(m,"","");enter();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+$("doLogout").onclick=()=>{auth=null;card=null;clearInterval(timer);$("lPin").value="";show("vLogin")};
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&$("vLogin").classList.contains("on"))$("doLogin").click()});
+
+function enter(){
+  show("vCard");render();
+  clearInterval(timer);
+  timer=setInterval(refresh,10000);
+}
+async function refresh(){
+  if(!auth)return;
+  try{const j=await api("me",auth);card=j.card;render();
+    $("syncTxt").textContent="синхронизировано в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+  }catch(_){$("syncTxt").textContent="нет связи, пробуем ещё раз"}
+}
+function render(){
+  if(!card)return;
+  $("plNum").textContent=card.num;$("plNick").textContent=card.nick;
+  $("plMon").textContent=money(card.mon);
+  $("balMon").textContent=money(card.mon);$("balAlt").textContent=money(card.alt);
+  const old=$("plastic").querySelector(".blocked-tag");if(old)old.remove();
+  if(card.blocked){const b=document.createElement("div");b.className="blocked-tag";b.textContent="карта заблокирована";$("plastic").appendChild(b)}
+  $("logList").innerHTML=card.log&&card.log.length?card.log.map(o=>
+    '<div class="op"><div class="ic">'+o.ic+'</div><div class="t"><b>'+esc(o.title)+'</b><span>'+esc(o.sub)+' · '+o.at+'</span></div>'+
+    (o.sign?'<div class="a '+(o.sign>0?"plus":"minus")+'">'+(o.sign>0?"+":"−")+money(o.amt)+' '+(o.cur==="mon"?"МОН":"АЛТ")+'</div>':'')+
+    '</div>').join(""):'<p class="empty">Операций пока нет.</p>';
+}
+const esc=s=>String(s||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+
+/* — операции — */
+$("doSend").onclick=async()=>{
+  const m=$("mSend"),b=$("doSend");b.disabled=true;say(m,"Отправляем…");
+  try{
+    const j=await api("transfer",Object.assign({},auth,{to:$("tTo").value,cur:$("tCur").value,
+      amount:$("tAmt").value,msg:$("tMsg").value}));
+    card=j.card;render();say(m,j.note,"ok");$("tAmt").value="";$("tMsg").value="";
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+$("doTax").onclick=async()=>{
+  const m=$("mTax"),b=$("doTax");b.disabled=true;say(m,"Проводим платёж…");
+  try{
+    const j=await api("tax",Object.assign({},auth,{receipt:$("xNo").value,amount:$("xAmt").value}));
+    card=j.card;render();say(m,j.note,"ok");$("xNo").value="";$("xAmt").value="";
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+function exPreview(){
+  const dir=$("eDir").value,a=Math.floor(+$("eAmt").value||0);
+  const got=dir==="m2a"?a*RATE:Math.floor(a/RATE);
+  $("exPreview").textContent=a?"Получите: "+money(got)+" "+(dir==="m2a"?"Алтын":"МОН"):"Получите: —";
+}
+$("eDir").onchange=exPreview;$("eAmt").oninput=exPreview;
+$("doEx").onclick=async()=>{
+  const m=$("mEx"),b=$("doEx");b.disabled=true;say(m,"Меняем…");
+  try{
+    const j=await api("exchange",Object.assign({},auth,{dir:$("eDir").value,amount:$("eAmt").value}));
+    card=j.card;render();say(m,j.note,"ok");exPreview();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+
+/* — казна — */
+$("doTre").onclick=async()=>{
+  const m=$("mTre"),b=$("doTre");b.disabled=true;say(m,"Проверяем код…");
+  try{
+    const code=$("tCode").value;
+    const j=await api("tre_list",{code});
+    treCode=code;$("treLock").style.display="none";$("treBody").style.display="block";
+    paint(j);say(m,"","");
+    clearInterval(treTimer);treTimer=setInterval(treRefresh,10000);
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+async function treRefresh(){
+  if(!treCode)return;
+  try{paint(await api("tre_list",{code:treCode}))}catch(_){}
+}
+function paint(j){
+  $("totMon").textContent=money(j.totalMon);$("totAlt").textContent=money(j.totalAlt);
+  const rows=$("cardRows");rows.innerHTML="";
+  $("noCards").style.display=j.cards.length?"none":"block";
+  j.cards.forEach(c=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td>'+esc(c.nick)+(c.blocked?' <span style="color:var(--alarm);font-size:12px">блок</span>':'')+'</td>'+
+      '<td class="num">'+c.num+'</td><td class="mon">'+money(c.mon)+'</td><td class="alt">'+money(c.alt)+'</td>'+
+      '<td style="text-align:right"><button class="mini">'+(c.blocked?"Разблокировать":"Заблокировать")+'</button></td>';
+    tr.querySelector("button").onclick=async()=>{
+      try{await api("tre_block",{code:treCode,target:c.nick});treRefresh();if(auth)refresh()}
+      catch(e){say($("mIssue"),e.message,"err")}
+    };
+    rows.appendChild(tr);
+  });
+}
+$("doIssue").onclick=async()=>{
+  const m=$("mIssue"),b=$("doIssue");b.disabled=true;say(m,"Проводим…");
+  try{
+    const j=await api("tre_issue",{code:treCode,target:$("aNick").value,cur:$("aCur").value,
+      amount:$("aAmt").value,why:$("aWhy").value});
+    say(m,j.note,"ok");$("aAmt").value="";$("aWhy").value="";treRefresh();if(auth)refresh();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+
+mark();
+</script>
+</body>
+</html>

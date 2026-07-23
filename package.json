@@ -1,0 +1,10 @@
+{
+  "name": "bank-stamonia",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Государственный банк Стамонийской Федерации — карты, МОН и Алтын",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
