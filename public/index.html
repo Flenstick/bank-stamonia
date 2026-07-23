@@ -120,6 +120,9 @@ td.alt{font-family:var(--m);color:var(--gold);font-weight:700}
 .mini{font:inherit;font-size:12px;background:transparent;border:1px solid var(--line);color:var(--muted);
   border-radius:8px;padding:5px 9px;cursor:pointer}
 .mini:hover{color:var(--text);border-color:#39513C}
+.mini.del:hover{color:var(--alarm);border-color:rgba(255,107,94,.5)}
+.mini.armed{color:#0A0F0B;background:var(--alarm);border-color:var(--alarm);font-weight:700}
+.mini:disabled{opacity:.6;cursor:default}
 .wrap-x{overflow-x:auto}
 footer{border-top:1px solid var(--line-soft);padding:20px}
 .fbar{max-width:1080px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;
@@ -288,7 +291,7 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
 
     <div class="card-box">
       <h2>Все карты</h2>
-      <p class="sub">Счета граждан Федерации. Обновляется каждые 10 секунд.</p>
+      <p class="sub">Счета граждан Федерации. Удаление закрывает счёт вместе с балансом — игрок сможет открыть карту заново на тот же ник.</p>
       <div class="wrap-x"><table>
         <thead><tr><th>Игрок</th><th>Карта</th><th>МОН</th><th>Алтын</th><th></th></tr></thead>
         <tbody id="cardRows"></tbody>
@@ -434,10 +437,28 @@ function paint(j){
     const tr=document.createElement("tr");
     tr.innerHTML='<td>'+esc(c.nick)+(c.blocked?' <span style="color:var(--alarm);font-size:12px">блок</span>':'')+'</td>'+
       '<td class="num">'+c.num+'</td><td class="mon">'+money(c.mon)+'</td><td class="alt">'+money(c.alt)+'</td>'+
-      '<td style="text-align:right"><button class="mini">'+(c.blocked?"Разблокировать":"Заблокировать")+'</button></td>';
-    tr.querySelector("button").onclick=async()=>{
+      '<td style="text-align:right;white-space:nowrap">'+
+        '<button class="mini">'+(c.blocked?"Разблокировать":"Заблокировать")+'</button> '+
+        '<button class="mini del">Удалить</button></td>';
+    const [bBlock,bDel]=tr.querySelectorAll("button");
+    bBlock.onclick=async()=>{
       try{await api("tre_block",{code:treCode,target:c.nick});treRefresh();if(auth)refresh()}
       catch(e){say($("mIssue"),e.message,"err")}
+    };
+    let armed=false,armTimer=null;
+    bDel.onclick=async()=>{
+      if(!armed){
+        armed=true;bDel.textContent="Точно удалить?";bDel.classList.add("armed");
+        clearTimeout(armTimer);
+        armTimer=setTimeout(()=>{armed=false;bDel.textContent="Удалить";bDel.classList.remove("armed")},4000);
+        return;
+      }
+      clearTimeout(armTimer);bDel.disabled=true;bDel.textContent="Удаляем…";
+      try{
+        const j=await api("tre_delete",{code:treCode,target:c.nick});
+        say($("mIssue"),j.note,"ok");treRefresh();
+        if(auth&&auth.nick.toLowerCase()===c.nick.toLowerCase()){auth=null;card=null;clearInterval(timer)}
+      }catch(e){say($("mIssue"),e.message,"err");bDel.disabled=false;bDel.textContent="Удалить";bDel.classList.remove("armed");armed=false}
     };
     rows.appendChild(tr);
   });

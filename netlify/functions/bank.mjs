@@ -235,6 +235,21 @@ export default async (req) => {
     return ok({ note: c.blocked ? "Карта " + c.nick + " заблокирована." : "Карта " + c.nick + " разблокирована." });
   }
 
+  if (a === "tre_delete") {
+    if (!isTreasurer()) return bad("Неверный код казначея.", 401);
+    const c = find(state, body.target);
+    if (!c) return bad("Карта не найдена.");
+    const snapshot = { nick: c.nick, num: c.num, mon: c.mon, alt: c.alt };
+    delete state.cards[norm(c.nick)];
+    await persist(state);
+    await notify("Карта закрыта", "Счёт удалён казначеем, игрок может открыть новый.", [
+      { name: "Игрок", value: snapshot.nick, inline: true },
+      { name: "Карта", value: "`" + snapshot.num + "`", inline: true },
+      { name: "Остаток на момент закрытия", value: money(snapshot.mon) + " МОН · " + money(snapshot.alt) + " Алтын", inline: false }
+    ], 0xff6b5e);
+    return ok({ note: "Карта " + snapshot.nick + " закрыта. Теперь он может открыть новую." });
+  }
+
   if (a === "tre_reset_pin") {
     if (!isTreasurer()) return bad("Неверный код казначея.", 401);
     const c = find(state, body.target);
