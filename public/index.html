@@ -124,6 +124,38 @@ td.alt{font-family:var(--m);color:var(--gold);font-weight:700}
 .mini.armed{color:#0A0F0B;background:var(--alarm);border-color:var(--alarm);font-weight:700}
 .mini:disabled{opacity:.6;cursor:default}
 .wrap-x{overflow-x:auto}
+/* ——— экран блокировки ——— */
+.lock{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;
+  background-image:radial-gradient(700px 420px at 50% -10%,rgba(61,190,56,.18),transparent 62%);
+  overflow-y:auto}
+.lock.on{display:grid;place-items:center}
+.lock-in{width:100%;max-width:340px;padding:28px 20px 34px;text-align:center}
+.lock-flag{width:52px;height:35px;border-radius:6px;margin:0 auto 18px;display:block;box-shadow:0 0 0 1px var(--line)}
+.lock-in h2{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:0}
+.lock-in .who{font-family:var(--m);font-size:12.5px;color:var(--green);margin:5px 0 0;letter-spacing:.06em}
+.lock-in .ask{font-size:14px;color:var(--muted);margin:22px 0 14px}
+.dots{display:flex;gap:14px;justify-content:center;margin-bottom:8px}
+.dots i{width:14px;height:14px;border-radius:50%;border:1.5px solid #3A4C3C;display:block;transition:.15s}
+.dots i.f{background:var(--green);border-color:var(--green);transform:scale(1.1)}
+.dots.bad i{border-color:var(--alarm)}
+.dots.bad i.f{background:var(--alarm);border-color:var(--alarm)}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.lock-msg{font-size:13px;min-height:19px;margin:0 0 16px;color:var(--muted)}
+.lock-msg.err{color:var(--alarm)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;max-width:280px;margin:0 auto}
+.pad button{font:inherit;font-family:var(--m);font-size:24px;font-weight:700;color:var(--text);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:50%;aspect-ratio:1;cursor:pointer;
+  transition:transform .08s,background .15s,border-color .15s}
+.pad button:hover{border-color:var(--green);background:rgba(61,190,56,.1)}
+.pad button:active{transform:scale(.93);background:rgba(61,190,56,.2)}
+.pad button.aux{font-size:14px;font-weight:600;font-family:var(--f);background:transparent;border-color:transparent;color:var(--muted)}
+.pad button.aux:hover{color:var(--text);background:transparent;border-color:transparent}
+.lock-switch{margin-top:24px;font:inherit;font-size:13.5px;background:none;border:0;color:var(--muted);
+  cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.lock-switch:hover{color:var(--green)}
+.remember{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted);cursor:pointer;margin-top:12px}
+.remember input{width:16px;height:16px;accent-color:var(--green);flex:none}
 footer{border-top:1px solid var(--line-soft);padding:20px}
 .fbar{max-width:1080px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;
   font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted)}
@@ -132,6 +164,26 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
 </style>
 </head>
 <body>
+
+<div class="lock" id="lock">
+  <div class="lock-in">
+    <svg class="lock-flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#060606"/><rect width="30" height="13.4" fill="#fff"/><rect width="30" height="6.7" fill="#2E9B2C"/></svg>
+    <h2>Банк Стамонии</h2>
+    <p class="who" id="lockNick">—</p>
+    <p class="ask">Введите ПИН-код</p>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <p class="lock-msg" id="lockMsg"></p>
+    <div class="pad" id="pad">
+      <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+      <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+      <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+      <button type="button" class="aux" data-act="clear">Стереть</button>
+      <button type="button">0</button>
+      <button type="button" class="aux" data-act="back">←</button>
+    </div>
+    <button class="lock-switch" id="lockSwitch">Войти под другим ником</button>
+  </div>
+</div>
 
 <header>
   <div class="hbar">
@@ -267,6 +319,7 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
       <div><label class="lbl" for="tCode">Код доступа</label><input type="password" id="tCode" placeholder="••••••••"></div>
       <div style="display:flex;align-items:flex-end"><button class="btn" id="doTre">Открыть казну</button></div>
     </div>
+    <label class="remember"><input type="checkbox" id="treRemember" checked><span>Запомнить на этом устройстве — казна будет открываться сразу</span></label>
     <p class="msg" id="mTre"></p>
   </div>
 
@@ -298,6 +351,8 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
       </table></div>
       <p class="empty" id="noCards">Карт пока нет.</p>
     </div>
+
+    <button class="btn ghost" id="treForget">Выйти из казны и забыть код на этом устройстве</button>
   </div>
 </section>
 
@@ -313,6 +368,13 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
 const RATE=8;                 // должен совпадать с RATE в netlify/functions/bank.mjs
 const $=id=>document.getElementById(id);
 let auth=null, card=null, treCode=null, timer=null, treTimer=null;
+
+/* — память устройства — */
+const mem={
+  get(k){try{return localStorage.getItem("sf-"+k)}catch(_){return null}},
+  set(k,v){try{localStorage.setItem("sf-"+k,v)}catch(_){}},
+  del(k){try{localStorage.removeItem("sf-"+k)}catch(_){}}
+};
 
 async function api(action,data){
   let r;
@@ -332,7 +394,18 @@ function mark(){
   $("navTre").classList.toggle("on",$("vTre").classList.contains("on"));
 }
 $("navCard").onclick=()=>show(auth?"vCard":"vLogin");
-$("navTre").onclick=()=>show("vTre");
+$("navTre").onclick=()=>{show("vTre");treAuto()};
+async function treAuto(){
+  const saved=mem.get("tre");
+  if(!saved||treCode)return;
+  const m=$("mTre");say(m,"Открываем казну…");
+  try{
+    const j=await api("tre_list",{code:saved});
+    treCode=saved;$("treLock").style.display="none";$("treBody").style.display="block";
+    paint(j);say(m,"","");
+    clearInterval(treTimer);treTimer=setInterval(treRefresh,10000);
+  }catch(_){mem.del("tre");say(m,"Код устарел, введите заново.","err")}
+}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id===t.dataset.pane));
@@ -345,7 +418,7 @@ $("doReg").onclick=async()=>{
   try{
     const nick=$("rNick").value.trim(),pin=$("rPin").value.trim();
     const j=await api("register",{nick,dis:$("rDis").value.trim(),pin});
-    auth={nick,pin};card=j.card;say(m,"","");enter();
+    auth={nick,pin};card=j.card;mem.set("nick",nick);say(m,"","");enter();
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
 $("doLogin").onclick=async()=>{
@@ -353,10 +426,11 @@ $("doLogin").onclick=async()=>{
   try{
     const nick=$("lNick").value.trim(),pin=$("lPin").value.trim();
     const j=await api("login",{nick,pin});
-    auth={nick,pin};card=j.card;say(m,"","");enter();
+    auth={nick,pin};card=j.card;mem.set("nick",nick);say(m,"","");enter();
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
-$("doLogout").onclick=()=>{auth=null;card=null;clearInterval(timer);$("lPin").value="";show("vLogin")};
+$("doLogout").onclick=()=>{auth=null;card=null;clearInterval(timer);
+  if(mem.get("nick"))openLock();else show("vLogin")};
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&$("vLogin").classList.contains("on"))$("doLogin").click()});
 
 function enter(){
@@ -420,10 +494,17 @@ $("doTre").onclick=async()=>{
   try{
     const code=$("tCode").value;
     const j=await api("tre_list",{code});
-    treCode=code;$("treLock").style.display="none";$("treBody").style.display="block";
-    paint(j);say(m,"","");
+    treCode=code;
+    if($("treRemember").checked)mem.set("tre",code);else mem.del("tre");
+    $("treLock").style.display="none";$("treBody").style.display="block";
+    paint(j);say(m,"","");$("tCode").value="";
     clearInterval(treTimer);treTimer=setInterval(treRefresh,10000);
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+$("treForget").onclick=()=>{
+  mem.del("tre");treCode=null;clearInterval(treTimer);
+  $("treBody").style.display="none";$("treLock").style.display="block";
+  say($("mTre"),"Код забыт на этом устройстве.","ok");
 };
 async function treRefresh(){
   if(!treCode)return;
@@ -457,7 +538,8 @@ function paint(j){
       try{
         const j=await api("tre_delete",{code:treCode,target:c.nick});
         say($("mIssue"),j.note,"ok");treRefresh();
-        if(auth&&auth.nick.toLowerCase()===c.nick.toLowerCase()){auth=null;card=null;clearInterval(timer)}
+        if(auth&&auth.nick.toLowerCase()===c.nick.toLowerCase()){auth=null;card=null;clearInterval(timer);mem.del("nick")}
+        if(mem.get("nick")&&mem.get("nick").toLowerCase()===c.nick.toLowerCase())mem.del("nick");
       }catch(e){say($("mIssue"),e.message,"err");bDel.disabled=false;bDel.textContent="Удалить";bDel.classList.remove("armed");armed=false}
     };
     rows.appendChild(tr);
@@ -472,7 +554,58 @@ $("doIssue").onclick=async()=>{
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
 
+/* — экран блокировки — */
+let buf="",busy=false;
+function openLock(){
+  const nick=mem.get("nick");if(!nick)return show("vLogin");
+  $("lockNick").textContent=nick;buf="";busy=false;paintDots();
+  $("lockMsg").textContent="";$("lockMsg").className="lock-msg";
+  $("lock").classList.add("on");
+}
+function closeLock(){$("lock").classList.remove("on")}
+function paintDots(bad){
+  const d=$("dots");d.classList.toggle("bad",!!bad);
+  [...d.children].forEach((el,i)=>el.classList.toggle("f",i<buf.length));
+}
+function tap(n){
+  if(busy||buf.length>=4)return;
+  buf+=n;paintDots();
+  if(buf.length===4)submitPin();
+}
+async function submitPin(){
+  busy=true;
+  const nick=mem.get("nick"),pin=buf;
+  $("lockMsg").textContent="Проверяем…";$("lockMsg").className="lock-msg";
+  try{
+    const j=await api("login",{nick,pin});
+    auth={nick,pin};card=j.card;closeLock();enter();
+    buf="";paintDots();$("lockMsg").textContent="";
+  }catch(e){
+    $("lockMsg").textContent=e.message;$("lockMsg").className="lock-msg err";
+    paintDots(true);
+    const inn=document.querySelector(".lock-in");
+    inn.classList.add("shake");setTimeout(()=>inn.classList.remove("shake"),420);
+    setTimeout(()=>{buf="";busy=false;paintDots()},420);
+  }
+}
+$("pad").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const act=b.dataset.act;
+  if(act==="clear"){buf="";paintDots();return}
+  if(act==="back"){buf=buf.slice(0,-1);paintDots();return}
+  tap(b.textContent.trim());
+});
+document.addEventListener("keydown",e=>{
+  if(!$("lock").classList.contains("on"))return;
+  if(/^\d$/.test(e.key))tap(e.key);
+  else if(e.key==="Backspace"){buf=buf.slice(0,-1);paintDots()}
+  else if(e.key==="Escape"){buf="";paintDots()}
+});
+$("lockSwitch").onclick=()=>{mem.del("nick");closeLock();show("vLogin")};
+
+/* — запуск — */
 mark();
+if(mem.get("nick"))openLock();
 </script>
 </body>
 </html>
