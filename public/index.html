@@ -156,6 +156,31 @@ td.alt{font-family:var(--m);color:var(--gold);font-weight:700}
 .lock-switch:hover{color:var(--green)}
 .remember{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted);cursor:pointer;margin-top:12px}
 .remember input{width:16px;height:16px;accent-color:var(--green);flex:none}
+/* ——— аватарки и профиль ——— */
+.ava{border-radius:50%;object-fit:cover;background:var(--surface-2);border:1px solid var(--line);flex:none;display:block}
+.ava-ph{border-radius:50%;background:var(--surface-2);border:1px solid var(--line);flex:none;
+  display:grid;place-items:center;font-weight:800;color:var(--green)}
+.pl-ava{width:44px;height:44px;border:2px solid rgba(61,190,56,.5)}
+.prof-head{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.prof-head .ava,.prof-head .ava-ph{width:72px;height:72px;font-size:26px}
+.prof-head .nm{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.prof-head .bio{font-size:14px;color:var(--muted)}
+.prof-head .since{font-family:var(--m);font-size:11px;color:#5A6A5C;margin-top:3px}
+.ava-pick{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.ava-pick button{font:inherit;font-size:13.5px;background:var(--surface-2);border:1px solid var(--line);
+  color:var(--text);border-radius:10px;padding:10px 14px;cursor:pointer;transition:.15s}
+.ava-pick button:hover{border-color:var(--green);color:var(--green)}
+td .ava,td .ava-ph{width:26px;height:26px;font-size:12px;display:inline-grid;vertical-align:middle;margin-right:8px}
+/* ——— таймер зарплаты ——— */
+.payday{background:linear-gradient(135deg,rgba(227,195,90,.12),rgba(24,35,26,.9));
+  border:1px solid rgba(227,195,90,.3);border-radius:13px;padding:15px 16px;margin-top:12px}
+.payday .lab{font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.15em;color:var(--gold)}
+.payday .clock{display:flex;gap:10px;margin-top:8px}
+.payday .unit{text-align:center;min-width:52px;background:rgba(8,12,9,.5);border-radius:9px;padding:7px 4px}
+.payday .unit b{display:block;font-family:var(--m);font-size:21px;font-weight:700;line-height:1.1}
+.payday .unit span{font-size:10px;color:var(--muted)}
+.payday .note{font-size:13px;color:var(--muted);margin:9px 0 0}
+.cur-note{font-size:12.5px;color:#5A6A5C;margin:8px 0 0;line-height:1.45}
 footer{border-top:1px solid var(--line-soft);padding:20px}
 .fbar{max-width:1080px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;
   font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted)}
@@ -237,6 +262,7 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
         <div class="chip"><i></i><i></i></div>
         <div class="pl-num" id="plNum">СФ 0000 0000</div>
         <div class="pl-bot">
+          <div id="plAva"></div>
           <div class="who"><div class="lab">Владелец</div><div class="val" id="plNick">—</div></div>
           <div class="bal"><b id="plMon">0</b><small>МОН</small></div>
         </div>
@@ -244,6 +270,16 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
       <div class="wallet">
         <div class="bal-card mon"><div class="cur">МОН</div><div class="amt" id="balMon">0</div></div>
         <div class="bal-card alt"><div class="cur">Алтын</div><div class="amt" id="balAlt">0</div></div>
+      </div>
+      <div class="payday" id="payday" style="display:none">
+        <div class="lab">До зарплаты</div>
+        <div class="clock">
+          <div class="unit"><b id="pdD">0</b><span>дней</span></div>
+          <div class="unit"><b id="pdH">0</b><span>часов</span></div>
+          <div class="unit"><b id="pdM">0</b><span>минут</span></div>
+          <div class="unit"><b id="pdS">0</b><span>секунд</span></div>
+        </div>
+        <p class="note" id="pdNote"></p>
       </div>
       <div class="sync"><i></i><span id="syncTxt">синхронизировано</span></div>
       <button class="btn ghost" style="margin-top:12px" id="doLogout">Выйти из карты</button>
@@ -254,6 +290,7 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
         <button class="tab on" data-pane="pSend">Перевод</button>
         <button class="tab" data-pane="pTax">Налоги</button>
         <button class="tab" data-pane="pEx">Обмен</button>
+        <button class="tab" data-pane="pProf">Профиль</button>
         <button class="tab" data-pane="pLog">История</button>
       </div>
 
@@ -291,11 +328,40 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
           <div style="display:grid;gap:12px">
             <div><label class="lbl" for="eDir">Направление</label>
               <select id="eDir"><option value="m2a">МОН → Алтын</option><option value="a2m">Алтын → МОН</option></select></div>
-            <div><label class="lbl" for="eAmt">Сколько меняем</label><input type="number" id="eAmt" min="1" step="1" placeholder="0"></div>
-            <button class="btn" id="doEx">Обменять</button>
+            <div><label class="lbl" for="eAmt">Сколько меняем</label><input type="number" id="eAmt" min="1" step="1" placeholder="0"></div>            <button class="btn" id="doEx">Обменять</button>
           </div>
           <p class="hint" id="exPreview">Получите: —</p>
+          <p class="cur-note">МОН — алмазно-глубинный сланец. Алтын — изумрудно-глубинный сланец, монета покрупнее.</p>
           <p class="msg" id="mEx"></p>
+        </div>
+
+        <div class="pane" id="pProf">
+          <h2>Профиль</h2>
+          <p class="sub">Аватарка видна на карте и в списке казны.</p>
+          <div class="prof-head">
+            <div id="profAva"></div>
+            <div>
+              <div class="nm" id="profNick">—</div>
+              <div class="bio" id="profBio">статус не задан</div>
+              <div class="since" id="profSince"></div>
+            </div>
+          </div>
+          <div style="display:grid;gap:12px">
+            <div>
+              <label class="lbl">Аватарка</label>
+              <div class="ava-pick">
+                <button type="button" id="avaFile">Загрузить картинку</button>
+                <button type="button" id="avaSkin">Взять из скина Minecraft</button>
+                <button type="button" id="avaClear">Убрать</button>
+              </div>
+              <input type="file" id="avaInput" accept="image/*" hidden>
+              <p class="hint">Картинка обрежется в круг и сожмётся до 128 пикселей — грузите что угодно.</p>
+            </div>
+            <div><label class="lbl" for="profBioIn">Статус · до 60 символов</label>
+              <input type="text" id="profBioIn" maxlength="60" placeholder="министр финансов · строю ратушу"></div>
+            <button class="btn" id="doProf">Сохранить профиль</button>
+          </div>
+          <p class="msg" id="mProf"></p>
         </div>
 
         <div class="pane" id="pLog">
@@ -330,16 +396,34 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
     </div>
 
     <div class="card-box">
-      <h2>Начислить или списать</h2>
-      <p class="sub">Плюс — эмиссия на карту, минус — штраф в пользу казны.</p>
+      <h2>Изменить баланс карты</h2>
+      <p class="sub">Начислить, списать или выставить точное число — как вам удобнее.</p>
       <div class="row">
         <div><label class="lbl" for="aNick">Карта игрока</label><input type="text" id="aNick" maxlength="32" placeholder="ник или номер карты"></div>
+        <div><label class="lbl" for="aMode">Что делаем</label><select id="aMode">
+          <option value="add">Начислить</option>
+          <option value="sub">Списать</option>
+          <option value="set">Выставить точный баланс</option>
+        </select></div>
         <div><label class="lbl" for="aCur">Валюта</label><select id="aCur"><option value="mon">МОН</option><option value="alt">Алтын</option></select></div>
-        <div><label class="lbl" for="aAmt">Сумма · минус для списания</label><input type="number" id="aAmt" step="1" placeholder="100"></div>
-        <div><label class="lbl" for="aWhy">Основание</label><input type="text" id="aWhy" maxlength="60" placeholder="зарплата за неделю"></div>
+        <div><label class="lbl" for="aAmt">Сумма</label><input type="number" id="aAmt" min="0" step="1" placeholder="100"></div>
+        <div class="wide"><label class="lbl" for="aWhy">Основание</label><input type="text" id="aWhy" maxlength="60" placeholder="зарплата за неделю"></div>
       </div>
       <button class="btn" style="margin-top:13px" id="doIssue">Провести операцию</button>
       <p class="msg" id="mIssue"></p>
+    </div>
+
+    <div class="card-box">
+      <h2>День зарплаты</h2>
+      <p class="sub">Таймер увидят все игроки на своей карте. Деньги начисляете вручную — банк только считает время.</p>
+      <div class="row">
+        <div><label class="lbl" for="pdNext">Ближайшая выплата</label><input type="datetime-local" id="pdNext"></div>
+        <div><label class="lbl" for="pdPer">Повторять каждые · дней</label><input type="number" id="pdPer" min="0" max="365" step="1" placeholder="7"></div>
+        <div class="wide"><label class="lbl" for="pdNoteIn">Подпись под таймером</label><input type="text" id="pdNoteIn" maxlength="60" placeholder="зарплата госслужащим"></div>
+      </div>
+      <button class="btn" style="margin-top:13px" id="doPayday">Сохранить</button>
+      <p class="hint">Ноль в поле «повторять» — разовая выплата без повтора. Пустая дата выключает таймер.</p>
+      <p class="msg" id="mPayday"></p>
     </div>
 
     <div class="card-box">
@@ -365,9 +449,9 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
 </div></footer>
 
 <script>
-const RATE=8;                 // должен совпадать с RATE в netlify/functions/bank.mjs
+const RATE=16;                // 1 Алтын = 16 МОН, должен совпадать с RATE в bank.mjs
 const $=id=>document.getElementById(id);
-let auth=null, card=null, treCode=null, timer=null, treTimer=null;
+let auth=null, card=null, treCode=null, timer=null, treTimer=null, settings=null, pdTimer=null;
 
 /* — память устройства — */
 const mem={
@@ -410,7 +494,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id===t.dataset.pane));
 });
-$("rateTxt").textContent="1 МОН = "+RATE+" Алтын";
+$("rateTxt").textContent="1 Алтын = "+RATE+" МОН";
 
 /* — вход — */
 $("doReg").onclick=async()=>{
@@ -418,7 +502,7 @@ $("doReg").onclick=async()=>{
   try{
     const nick=$("rNick").value.trim(),pin=$("rPin").value.trim();
     const j=await api("register",{nick,dis:$("rDis").value.trim(),pin});
-    auth={nick,pin};card=j.card;mem.set("nick",nick);say(m,"","");enter();
+    auth={nick,pin};card=j.card;settings=j.settings||settings;mem.set("nick",nick);say(m,"","");enter();
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
 $("doLogin").onclick=async()=>{
@@ -426,7 +510,7 @@ $("doLogin").onclick=async()=>{
   try{
     const nick=$("lNick").value.trim(),pin=$("lPin").value.trim();
     const j=await api("login",{nick,pin});
-    auth={nick,pin};card=j.card;mem.set("nick",nick);say(m,"","");enter();
+    auth={nick,pin};card=j.card;settings=j.settings||settings;mem.set("nick",nick);say(m,"","");enter();
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
 $("doLogout").onclick=()=>{auth=null;card=null;clearInterval(timer);
@@ -440,21 +524,61 @@ function enter(){
 }
 async function refresh(){
   if(!auth)return;
-  try{const j=await api("me",auth);card=j.card;render();
+  try{const j=await api("me",auth);card=j.card;if(j.settings)settings=j.settings;render();
     $("syncTxt").textContent="синхронизировано в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
   }catch(_){$("syncTxt").textContent="нет связи, пробуем ещё раз"}
+}
+function avaHTML(av,nick,cls){
+  const c=cls||"";
+  return av?'<img class="ava '+c+'" src="'+esc(av)+'" alt="">'
+           :'<div class="ava-ph '+c+'">'+esc((nick||"?").slice(0,1).toUpperCase())+'</div>';
 }
 function render(){
   if(!card)return;
   $("plNum").textContent=card.num;$("plNick").textContent=card.nick;
   $("plMon").textContent=money(card.mon);
+  $("plAva").innerHTML=avaHTML(card.avatar,card.nick,"pl-ava");
   $("balMon").textContent=money(card.mon);$("balAlt").textContent=money(card.alt);
+  $("profAva").innerHTML=avaHTML(card.avatar,card.nick);
+  $("profNick").textContent=card.nick;
+  $("profBio").textContent=card.bio||"статус не задан";
+  $("profSince").textContent="карта открыта "+(card.since||"—");
+  if(document.activeElement!==$("profBioIn"))$("profBioIn").value=card.bio||"";
   const old=$("plastic").querySelector(".blocked-tag");if(old)old.remove();
   if(card.blocked){const b=document.createElement("div");b.className="blocked-tag";b.textContent="карта заблокирована";$("plastic").appendChild(b)}
   $("logList").innerHTML=card.log&&card.log.length?card.log.map(o=>
     '<div class="op"><div class="ic">'+o.ic+'</div><div class="t"><b>'+esc(o.title)+'</b><span>'+esc(o.sub)+' · '+o.at+'</span></div>'+
     (o.sign?'<div class="a '+(o.sign>0?"plus":"minus")+'">'+(o.sign>0?"+":"−")+money(o.amt)+' '+(o.cur==="mon"?"МОН":"АЛТ")+'</div>':'')+
     '</div>').join(""):'<p class="empty">Операций пока нет.</p>';
+  drawPayday();
+}
+
+/* — таймер зарплаты — */
+function nextPayday(){
+  const p=settings&&settings.payday;
+  if(!p||!p.next)return null;
+  let t=new Date(p.next).getTime();
+  if(isNaN(t))return null;
+  const per=(p.periodDays||0)*86400000;
+  if(per>0)while(t<=Date.now())t+=per;
+  return t;
+}
+function drawPayday(){
+  const box=$("payday"),t=nextPayday();
+  if(!t){box.style.display="none";clearInterval(pdTimer);return}
+  box.style.display="block";
+  $("pdNote").textContent=(settings.payday.note||"")+
+    (settings.payday.periodDays?(settings.payday.note?" · ":"")+"каждые "+settings.payday.periodDays+" дн.":"");
+  clearInterval(pdTimer);
+  const tick=()=>{
+    let s=Math.max(0,Math.floor((t-Date.now())/1000));
+    $("pdD").textContent=Math.floor(s/86400);
+    $("pdH").textContent=Math.floor(s%86400/3600);
+    $("pdM").textContent=Math.floor(s%3600/60);
+    $("pdS").textContent=s%60;
+    if(s<=0){clearInterval(pdTimer);setTimeout(drawPayday,1500)}
+  };
+  tick();pdTimer=setInterval(tick,1000);
 }
 const esc=s=>String(s||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
 
@@ -476,8 +600,9 @@ $("doTax").onclick=async()=>{
 };
 function exPreview(){
   const dir=$("eDir").value,a=Math.floor(+$("eAmt").value||0);
-  const got=dir==="m2a"?a*RATE:Math.floor(a/RATE);
-  $("exPreview").textContent=a?"Получите: "+money(got)+" "+(dir==="m2a"?"Алтын":"МОН"):"Получите: —";
+  const got=dir==="m2a"?Math.floor(a/RATE):a*RATE;
+  $("exPreview").textContent=a?"Получите: "+money(got)+" "+(dir==="m2a"?"Алтын":"МОН")
+    +(dir==="m2a"&&a%RATE?" · сдача "+money(a%RATE)+" МОН останется на карте":""):"Получите: —";
 }
 $("eDir").onchange=exPreview;$("eAmt").oninput=exPreview;
 $("doEx").onclick=async()=>{
@@ -485,6 +610,47 @@ $("doEx").onclick=async()=>{
   try{
     const j=await api("exchange",Object.assign({},auth,{dir:$("eDir").value,amount:$("eAmt").value}));
     card=j.card;render();say(m,j.note,"ok");exPreview();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+
+/* — профиль — */
+let pendingAva=null;
+$("avaFile").onclick=()=>$("avaInput").click();
+$("avaInput").onchange=e=>{
+  const f=e.target.files[0];e.target.value="";
+  if(!f)return;
+  if(!/^image\//.test(f.type))return say($("mProf"),"Это не картинка.","err");
+  const img=new Image(),u=URL.createObjectURL(f);
+  img.onload=()=>{
+    const S=128,cv=document.createElement("canvas");cv.width=cv.height=S;
+    const g=cv.getContext("2d");
+    const side=Math.min(img.width,img.height);
+    g.imageSmoothingQuality="high";
+    g.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,S,S);
+    pendingAva=cv.toDataURL("image/jpeg",.82);
+    URL.revokeObjectURL(u);
+    $("profAva").innerHTML=avaHTML(pendingAva,card.nick);
+    say($("mProf"),"Картинка готова — нажмите «Сохранить профиль».","ok");
+  };
+  img.onerror=()=>say($("mProf"),"Не смог прочитать картинку.","err");
+  img.src=u;
+};
+$("avaSkin").onclick=()=>{
+  pendingAva="https://mc-heads.net/avatar/"+encodeURIComponent(card.nick)+"/128";
+  $("profAva").innerHTML=avaHTML(pendingAva,card.nick);
+  say($("mProf"),"Голова из скина подставлена — нажмите «Сохранить профиль».","ok");
+};
+$("avaClear").onclick=()=>{
+  pendingAva="";
+  $("profAva").innerHTML=avaHTML("",card.nick);
+  say($("mProf"),"Аватарка убрана — нажмите «Сохранить профиль».","ok");
+};
+$("doProf").onclick=async()=>{
+  const m=$("mProf"),b=$("doProf");b.disabled=true;say(m,"Сохраняем…");
+  try{
+    const j=await api("profile",Object.assign({},auth,{
+      avatar:pendingAva===null?(card.avatar||""):pendingAva, bio:$("profBioIn").value}));
+    card=j.card;pendingAva=null;render();say(m,j.note,"ok");
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
 
@@ -512,11 +678,18 @@ async function treRefresh(){
 }
 function paint(j){
   $("totMon").textContent=money(j.totalMon);$("totAlt").textContent=money(j.totalAlt);
+  if(j.settings){
+    settings=j.settings;
+    const p=j.settings.payday||{};
+    if(document.activeElement!==$("pdNext"))$("pdNext").value=p.next||"";
+    if(document.activeElement!==$("pdPer"))$("pdPer").value=p.periodDays||0;
+    if(document.activeElement!==$("pdNoteIn"))$("pdNoteIn").value=p.note||"";
+  }
   const rows=$("cardRows");rows.innerHTML="";
   $("noCards").style.display=j.cards.length?"none":"block";
   j.cards.forEach(c=>{
     const tr=document.createElement("tr");
-    tr.innerHTML='<td>'+esc(c.nick)+(c.blocked?' <span style="color:var(--alarm);font-size:12px">блок</span>':'')+'</td>'+
+    tr.innerHTML='<td>'+avaHTML(c.avatar,c.nick)+esc(c.nick)+(c.blocked?' <span style="color:var(--alarm);font-size:12px">блок</span>':'')+'</td>'+
       '<td class="num">'+c.num+'</td><td class="mon">'+money(c.mon)+'</td><td class="alt">'+money(c.alt)+'</td>'+
       '<td style="text-align:right;white-space:nowrap">'+
         '<button class="mini">'+(c.blocked?"Разблокировать":"Заблокировать")+'</button> '+
@@ -548,9 +721,20 @@ function paint(j){
 $("doIssue").onclick=async()=>{
   const m=$("mIssue"),b=$("doIssue");b.disabled=true;say(m,"Проводим…");
   try{
-    const j=await api("tre_issue",{code:treCode,target:$("aNick").value,cur:$("aCur").value,
-      amount:$("aAmt").value,why:$("aWhy").value});
+    const mode=$("aMode").value, raw=Math.abs(Math.floor(+$("aAmt").value||0));
+    const payload={code:treCode,target:$("aNick").value,cur:$("aCur").value,why:$("aWhy").value};
+    if(mode==="set"){payload.mode="set";payload.amount=raw}
+    else payload.amount=mode==="sub"?-raw:raw;
+    const j=await api("tre_issue",payload);
     say(m,j.note,"ok");$("aAmt").value="";$("aWhy").value="";treRefresh();if(auth)refresh();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+$("doPayday").onclick=async()=>{
+  const m=$("mPayday"),b=$("doPayday");b.disabled=true;say(m,"Сохраняем…");
+  try{
+    const j=await api("tre_payday",{code:treCode,next:$("pdNext").value,
+      periodDays:$("pdPer").value,note:$("pdNoteIn").value});
+    settings=j.settings;say(m,j.note,"ok");if(auth)drawPayday();
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
 
@@ -578,7 +762,7 @@ async function submitPin(){
   $("lockMsg").textContent="Проверяем…";$("lockMsg").className="lock-msg";
   try{
     const j=await api("login",{nick,pin});
-    auth={nick,pin};card=j.card;closeLock();enter();
+    auth={nick,pin};card=j.card;settings=j.settings||settings;closeLock();enter();
     buf="";paintDots();$("lockMsg").textContent="";
   }catch(e){
     $("lockMsg").textContent=e.message;$("lockMsg").className="lock-msg err";

@@ -2,7 +2,8 @@ import { getStore } from "@netlify/blobs";
 import crypto from "node:crypto";
 
 /* ————— настройки ————— */
-const RATE = 8;                                   // 1 МОН = 8 Алтын
+const RATE = 16;                                  // 1 Алтын = 16 МОН
+const AVATAR_LIMIT = 60000;                       // ~45 КБ на аватарку
 const SALT = "stamonia-bank-salt";                // соль для ПИНов
 const KEY = "state";
 
@@ -21,7 +22,9 @@ function stamp() {
 
 async function load() {
   const raw = await store().get(KEY, { type: "json" });
-  return raw || { cards: {}, seq: 0 };
+  const s = raw || { cards: {}, seq: 0 };
+  if (!s.settings) s.settings = { payday: { next: "", periodDays: 7, note: "" } };
+  return s;
 }
 const persist = (state) => store().setJSON(KEY, state);
 
@@ -38,7 +41,11 @@ function find(state, q) {
   return Object.values(state.cards).find((c) => norm(c.num) === s) || null;
 }
 function pub(c) {
-  return { nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked, log: c.log.slice(0, 30), since: c.since };
+  return {
+    nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked,
+    log: c.log.slice(0, 30), since: c.since,
+    avatar: c.avatar || "", bio: c.bio || ""
+  };
 }
 function log(card, ic, title, sub, amt, cur, sign) {
   card.log.unshift({ ic, title, sub, amt, cur, sign, at: stamp() });
@@ -91,7 +98,7 @@ export default async (req) => {
     if (!/^\d{4}$/.test(pin)) return bad("ПИН — ровно 4 цифры.");
     if (state.cards[norm(nick)]) return bad("Карта на этот ник уже открыта.");
 
-    const card = { nick, dis, pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp() };
+    const card = { nick, dis, pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "" };
     log(card, "★", "Карта открыта", "Добро пожаловать в банк", 0, "mon", 0);
     state.cards[norm(nick)] = card;
     await persist(state);
@@ -107,7 +114,21 @@ export default async (req) => {
   if (a === "login" || a === "me") {
     const r = auth(state, body.nick, body.pin);
     if (r.err) return bad(r.err, 401);
-    return ok({ card: pub(r.card) });
+    return ok({ card: pub(r.card), settings: state.settings });
+  }
+
+  /* — профиль — */
+  if (a === "profile") {
+    const r = auth(state, body.nick, body.pin);
+    if (r.err) return bad(r.err, 401);
+    const c = r.card;
+    const av = String(body.avatar || "");
+    if (av && av.length > AVATAR_LIMIT) return bad("Аватарка слишком тяжёлая, возьмите картинку поменьше.");
+    if (av && !/^(data:image\/|https:\/\/)/.test(av)) return bad("Неверная картинка.");
+    c.avatar = av;
+    c.bio = String(body.bio || "").trim().slice(0, 60);
+    await persist(state);
+    return ok({ card: pub(c), note: "Профиль сохранён." });
   }
 
   /* — перевод — */
@@ -171,17 +192,17 @@ export default async (req) => {
     if (!(amt >= 1)) return bad("Введите сумму обмена.");
     let note;
     if (body.dir === "m2a") {
+      if (amt < RATE) return bad("Минимум " + RATE + " МОН за один Алтын.");
       if (c.mon < amt) return bad("Не хватает МОН.");
-      c.mon -= amt; c.alt += amt * RATE;
-      log(c, "⇄", "Обмен МОН на Алтын", "курс 1 : " + RATE, amt, "mon", -1);
-      note = "Обменяно: " + money(amt) + " МОН → " + money(amt * RATE) + " Алтын.";
-    } else {
-      if (amt < RATE) return bad("Минимум " + RATE + " Алтын за один МОН.");
-      if (c.alt < amt) return bad("Не хватает Алтын.");
       const got = Math.floor(amt / RATE), spent = got * RATE;
-      c.alt -= spent; c.mon += got;
-      log(c, "⇄", "Обмен Алтын на МОН", "курс " + RATE + " : 1", spent, "alt", -1);
-      note = "Обменяно: " + money(spent) + " Алтын → " + money(got) + " МОН.";
+      c.mon -= spent; c.alt += got;
+      log(c, "⇄", "Обмен МОН на Алтын", "курс " + RATE + " : 1", spent, "mon", -1);
+      note = "Обменяно: " + money(spent) + " МОН → " + money(got) + " Алтын.";
+    } else {
+      if (c.alt < amt) return bad("Не хватает Алтын.");
+      c.alt -= amt; c.mon += amt * RATE;
+      log(c, "⇄", "Обмен Алтын на МОН", "курс 1 : " + RATE, amt, "alt", -1);
+      note = "Обменяно: " + money(amt) + " Алтын → " + money(amt * RATE) + " МОН.";
     }
     await persist(state);
     return ok({ card: pub(c), note });
@@ -193,25 +214,55 @@ export default async (req) => {
 
   if (a === "tre_list") {
     if (!isTreasurer()) return bad("Неверный код казначея.", 401);
-    const all = Object.values(state.cards).map((c) => ({ nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked }));
+    const all = Object.values(state.cards).map((c) => ({
+      nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked, avatar: c.avatar || ""
+    }));
     return ok({
       cards: all.sort((x, y) => y.mon - x.mon),
       totalMon: all.reduce((s, c) => s + c.mon, 0),
-      totalAlt: all.reduce((s, c) => s + c.alt, 0)
+      totalAlt: all.reduce((s, c) => s + c.alt, 0),
+      settings: state.settings
     });
+  }
+
+  /* — день зарплаты — */
+  if (a === "tre_payday") {
+    if (!isTreasurer()) return bad("Неверный код казначея.", 401);
+    const next = String(body.next || "").slice(0, 20);
+    const per = Math.max(0, Math.min(365, int(body.periodDays) || 0));
+    state.settings.payday = { next, periodDays: per, note: String(body.note || "").trim().slice(0, 60) };
+    await persist(state);
+    return ok({ note: next ? "День зарплаты установлен." : "Таймер зарплаты выключен.", settings: state.settings });
   }
 
   if (a === "tre_issue") {
     if (!isTreasurer()) return bad("Неверный код казначея.", 401);
     const c = find(state, body.target);
     const cur = body.cur === "alt" ? "alt" : "mon";
-    const amt = int(body.amount);
     const why = String(body.why || "").trim().slice(0, 60);
+    const cn = cur === "mon" ? "МОН" : "Алтын";
     if (!c) return bad("Карта не найдена.");
+
+    /* точная установка баланса */
+    if (body.mode === "set") {
+      const val = int(body.amount);
+      if (!(val >= 0)) return bad("Баланс не может быть отрицательным.");
+      const diff = val - c[cur];
+      c[cur] = val;
+      log(c, "✎", "Баланс изменён казной", why || "ручная правка", Math.abs(diff), cur, diff === 0 ? 0 : (diff > 0 ? 1 : -1));
+      await persist(state);
+      await notify("Баланс изменён вручную", why || null, [
+        { name: "Игрок", value: c.nick + "\n`" + c.num + "`", inline: true },
+        { name: "Стало", value: "**" + money(val) + " " + cn + "**", inline: true },
+        { name: "Разница", value: (diff >= 0 ? "+" : "−") + money(Math.abs(diff)) + " " + cn, inline: true }
+      ], 0xe3c35a);
+      return ok({ note: "Баланс " + c.nick + " теперь " + money(val) + " " + cn + "." });
+    }
+
+    const amt = int(body.amount);
     if (!amt) return bad("Введите сумму: плюс — начисление, минус — списание.");
     if (amt < 0 && c[cur] < Math.abs(amt)) return bad("На карте меньше средств, чем вы списываете.");
     c[cur] += amt;
-    const cn = cur === "mon" ? "МОН" : "Алтын";
     log(c, amt > 0 ? "◆" : "⚑", amt > 0 ? "Начисление из казны" : "Списание в казну", why || "без основания", Math.abs(amt), cur, amt > 0 ? 1 : -1);
     await persist(state);
     await notify(amt > 0 ? "Начисление из казны" : "Списание в казну", why || null, [
