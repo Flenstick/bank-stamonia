@@ -78,15 +78,22 @@ input.pin{font-family:var(--m);letter-spacing:.45em}
 .desk{display:grid;grid-template-columns:400px minmax(0,1fr);gap:34px;align-items:start;padding-top:8px}
 /* карта из первой версии */
 .plastic{position:relative;border-radius:20px;padding:24px;overflow:hidden;aspect-ratio:1.62;
-  background:linear-gradient(145deg,#1E4A1C 0%,#0E1A0F 55%,#060906 100%);
-  border:1px solid rgba(61,190,56,.35);box-shadow:0 24px 54px -26px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.07);
-  display:flex;flex-direction:column;justify-content:space-between}
+  --c1:#1E4A1C;--c2:#0E1A0F;--c3:#060906;--cg:61,190,56;
+  background:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%);
+  border:1px solid rgba(var(--cg),.35);box-shadow:0 24px 54px -26px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.07);
+  display:flex;flex-direction:column;justify-content:space-between;transition:background .35s,border-color .35s}
+.st-emerald{--c1:#1E4A1C;--c2:#0E1A0F;--c3:#060906;--cg:61,190,56}
+.st-obsidian{--c1:#333833;--c2:#161815;--c3:#050605;--cg:150,160,150}
+.st-gold{--c1:#59461A;--c2:#211A0A;--c3:#0A0704;--cg:227,195,90}
+.st-malachite{--c1:#0F4A3E;--c2:#08201B;--c3:#040A09;--cg:52,211,178}
+.st-ruby{--c1:#54181B;--c2:#1E0B0D;--c3:#080404;--cg:255,107,94}
+.st-azure{--c1:#173A5E;--c2:#0A1A28;--c3:#040709;--cg:90,168,255}
 .plastic::before{content:"";position:absolute;inset:0;
   background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.09) 47%,transparent 58%);
   transform:translateX(-30%);transition:transform .7s ease}
 .plastic:hover::before{transform:translateX(30%)}
 .plastic::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;border-radius:50%;
-  background:radial-gradient(circle,rgba(61,190,56,.28),transparent 65%)}
+  background:radial-gradient(circle,rgba(var(--cg),.28),transparent 65%)}
 .pl-top{display:flex;align-items:flex-start;gap:12px;position:relative;z-index:2}
 .pl-top .bank{font-weight:800;font-size:14.5px}
 .pl-top .kind{font-family:var(--m);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
@@ -175,7 +182,7 @@ input.pin{font-family:var(--m);letter-spacing:.45em}
 /* профиль */
 .ava{border-radius:50%;object-fit:cover;background:var(--p2);flex:none;display:block}
 .ava-ph{border-radius:50%;background:var(--p2);flex:none;display:grid;place-items:center;font-weight:800;color:var(--green)}
-.pl-ava{width:44px;height:44px;box-shadow:0 0 0 2px rgba(61,190,56,.45)}
+.pl-ava{width:44px;height:44px;box-shadow:0 0 0 2px rgba(var(--cg),.5)}
 .prof{display:flex;align-items:center;gap:18px;margin-bottom:24px}
 .prof .ava,.prof .ava-ph{width:84px;height:84px;font-size:30px}
 .prof .nm{font-size:21px;font-weight:800;letter-spacing:-.02em}
@@ -263,6 +270,17 @@ input.pin{font-family:var(--m);letter-spacing:.45em}
 .swipe.small .fill{width:48px}
 .swipe.small .txt{font-size:13.5px;padding-left:28px}
 .fine .swipe{flex-basis:100%}
+/* выбор дизайна карты */
+.skins{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.skin-opt{position:relative;border:0;padding:0;background:none;cursor:pointer;text-align:left}
+.skin-opt .sw{height:58px;border-radius:13px;border:1px solid rgba(var(--cg),.4);
+  background:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%);transition:.15s;position:relative;overflow:hidden}
+.skin-opt .sw::after{content:"";position:absolute;right:-14px;top:-14px;width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle,rgba(var(--cg),.3),transparent 65%)}
+.skin-opt span{display:block;font-size:12.5px;color:var(--muted);margin-top:7px}
+.skin-opt:hover .sw{transform:translateY(-2px)}
+.skin-opt.on .sw{box-shadow:0 0 0 2px var(--green)}
+.skin-opt.on span{color:var(--text);font-weight:600}
 footer{padding:24px 26px 40px}
 .fbar{max-width:1180px;margin:0 auto;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between;
   font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim)}
@@ -462,6 +480,10 @@ footer{padding:24px 26px 40px}
           </div>
           <input type="file" id="avaInput" accept="image/*" hidden>
         </div>
+        <div>
+          <label class="lbl">Дизайн карты</label>
+          <div class="skins" id="skins"></div>
+        </div>
         <div><label class="lbl" for="profBioIn">Статус · до 60 символов</label>
           <input type="text" id="profBioIn" maxlength="60" placeholder="министр финансов · строю ратушу"></div>
         <div><label class="lbl" for="profDid">Discord ID · необязательно</label>
@@ -659,6 +681,8 @@ function avaHTML(av,nick,cls){
 }
 function render(){
   if(!card)return;
+  $("plastic").className="plastic st-"+(card.style||"emerald");
+  pickedStyle=null;paintStyles();
   $("plNum").textContent=card.num;$("plNick").textContent=card.nick;
   $("plMon").textContent=money(card.mon);
   $("plAva").innerHTML=avaHTML(card.avatar,card.nick,"pl-ava");
@@ -888,6 +912,32 @@ function units(){
 }
 ["tCur","aCur","fCur"].forEach(id=>$(id).addEventListener("change",units));
 units();
+/* — дизайн карты — */
+const CARD_STYLES=[
+  ["emerald","Изумруд"],["obsidian","Обсидиан"],["gold","Золото"],
+  ["malachite","Малахит"],["ruby","Рубин"],["azure","Лазурь"]
+];
+let pickedStyle=null;
+CARD_STYLES.forEach(([id,name])=>{
+  const b=document.createElement("button");
+  b.type="button";b.className="skin-opt st-"+id;b.dataset.style=id;
+  b.innerHTML='<div class="sw"></div><span>'+name+'</span>';
+  b.onclick=async()=>{
+    pickedStyle=id;paintStyles();
+    $("plastic").className="plastic st-"+id;
+    try{
+      const j=await api("profile",Object.assign({},auth,{avatar:card.avatar||"",bio:card.bio||"",
+        discordId:card.discordId||"",style:id}));
+      card=j.card;render();say($("mProf"),"Дизайн карты сохранён.","ok");
+    }catch(e){say($("mProf"),e.message,"err")}
+  };
+  $("skins").appendChild(b);
+});
+function paintStyles(){
+  const cur=pickedStyle||(card&&card.style)||"emerald";
+  document.querySelectorAll(".skin-opt").forEach(b=>b.classList.toggle("on",b.dataset.style===cur));
+}
+
 /* — профиль — */
 let pendingAva=null;
 $("avaFile").onclick=()=>$("avaInput").click();
@@ -922,7 +972,7 @@ $("doProf").onclick=async()=>{
   try{
     const j=await api("profile",Object.assign({},auth,{
       avatar:pendingAva===null?(card.avatar||""):pendingAva,bio:$("profBioIn").value,
-      discordId:$("profDid").value}));
+      discordId:$("profDid").value,style:card.style||"emerald"}));
     card=j.card;pendingAva=null;render();say(m,j.note,"ok");
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };

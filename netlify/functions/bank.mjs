@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 /* ————— настройки ————— */
 const RATE = 16;                                  // 1 Алтын = 16 МОН
 const AVATAR_LIMIT = 60000;                       // ~45 КБ на аватарку
+const STYLES = ["emerald", "obsidian", "gold", "malachite", "ruby", "azure"];
 const SALT = "stamonia-bank-salt";                // соль для ПИНов
 const KEY = "state";
 
@@ -45,6 +46,7 @@ function pub(c) {
     nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked,
     log: c.log.slice(0, 30), since: c.since,
     avatar: c.avatar || "", bio: c.bio || "", dis: c.dis || "", discordId: c.discordId || "",
+    style: STYLES.includes(c.style) ? c.style : "emerald",
     fines: (c.fines || []).filter((f) => !f.paid)
   };
 }
@@ -132,7 +134,7 @@ export default async (req) => {
     if (!/^\d{4}$/.test(pin)) return bad("ПИН — ровно 4 цифры.");
     if (state.cards[norm(nick)]) return bad("Карта на этот ник уже открыта.");
 
-    const card = { nick, dis, discordId: String(body.discordId || "").replace(/\D/g, "").slice(0, 20), pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "", fines: [] };
+    const card = { nick, dis, discordId: String(body.discordId || "").replace(/\D/g, "").slice(0, 20), pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "", style: "emerald", fines: [] };
     log(card, "★", "Карта открыта", "Добро пожаловать в банк", 0, "mon", 0);
     state.cards[norm(nick)] = card;
     await persist(state);
@@ -186,6 +188,7 @@ export default async (req) => {
     c.avatar = av;
     c.bio = String(body.bio || "").trim().slice(0, 60);
     if (body.discordId !== undefined) c.discordId = String(body.discordId).replace(/\D/g, "").slice(0, 20);
+    if (body.style && STYLES.includes(body.style)) c.style = body.style;
     if (body.dis) c.dis = String(body.dis).trim().slice(0, 40);
     await persist(state);
     return ok({ card: pub(c), note: "Профиль сохранён." });
