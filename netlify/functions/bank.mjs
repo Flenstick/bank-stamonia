@@ -5,10 +5,14 @@ import crypto from "node:crypto";
 const RATE = 16;                                  // 1 Алтын = 16 МОН
 const AVATAR_LIMIT = 60000;                       // ~45 КБ на аватарку
 const STYLES = ["emerald", "obsidian", "gold", "malachite", "ruby", "azure"];
+const GRADS = ["diag", "vert", "radial", "conic", "aurora", "spot"];
+const PHOTO_LIMIT = 260000;                       // ~190 КБ на фон-фото карты
 const SALT = "stamonia-bank-salt";                // соль для ПИНов
 const KEY = "state";
 
 const store = () => getStore({ name: "sf-bank", consistency: "strong" });
+const photoKey = (nick) => "photo-" + crypto.createHash("sha1").update(norm(nick)).digest("hex");
+const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Math.round(Number(n) || 0)));
 const hash = (pin) => crypto.createHash("sha256").update(SALT + pin).digest("hex");
 const norm = (s) => String(s || "").trim().toLowerCase();
 const money = (n) => Number(n).toLocaleString("ru-RU");
@@ -41,12 +45,23 @@ function find(state, q) {
   if (state.cards[s]) return state.cards[s];
   return Object.values(state.cards).find((c) => norm(c.num) === s) || null;
 }
+function faceOf(c) {
+  const f = c.face || {};
+  return {
+    grad: GRADS.includes(f.grad) ? f.grad : "diag",
+    photo: !!f.photo,
+    dim: typeof f.dim === "number" ? clamp(f.dim, 0, 90) : 50,
+    mix: typeof f.mix === "number" ? clamp(f.mix, 0, 100) : 70,
+    v: f.v || 0
+  };
+}
 function pub(c) {
   return {
     nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked,
     log: c.log.slice(0, 30), since: c.since,
     avatar: c.avatar || "", bio: c.bio || "", dis: c.dis || "", discordId: c.discordId || "",
     style: STYLES.includes(c.style) ? c.style : "emerald",
+    face: faceOf(c),
     fines: (c.fines || []).filter((f) => !f.paid)
   };
 }
@@ -134,7 +149,7 @@ export default async (req) => {
     if (!/^\d{4}$/.test(pin)) return bad("ПИН — ровно 4 цифры.");
     if (state.cards[norm(nick)]) return bad("Карта на этот ник уже открыта.");
 
-    const card = { nick, dis, discordId: String(body.discordId || "").replace(/\D/g, "").slice(0, 20), pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "", style: "emerald", fines: [] };
+    const card = { nick, dis, discordId: String(body.discordId || "").replace(/\D/g, "").slice(0, 20), pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "", style: "emerald", face: { grad: "diag", photo: false, dim: 50, mix: 70, v: 0 }, fines: [] };
     log(card, "★", "Карта открыта", "Добро пожаловать в банк", 0, "mon", 0);
     state.cards[norm(nick)] = card;
     await persist(state);
@@ -190,8 +205,36 @@ export default async (req) => {
     if (body.discordId !== undefined) c.discordId = String(body.discordId).replace(/\D/g, "").slice(0, 20);
     if (body.style && STYLES.includes(body.style)) c.style = body.style;
     if (body.dis) c.dis = String(body.dis).trim().slice(0, 40);
+
+    const f = c.face || (c.face = { grad: "diag", photo: false, dim: 50, mix: 70, v: 0 });
+    if (body.grad && GRADS.includes(body.grad)) f.grad = body.grad;
+    if (body.dim !== undefined) f.dim = clamp(body.dim, 0, 90);
+    if (body.mix !== undefined) f.mix = clamp(body.mix, 0, 100);
+    if (body.photo !== undefined) {
+      const ph = String(body.photo || "");
+      if (ph) {
+        if (!/^data:image\//.test(ph)) return bad("Неверное фото.");
+        if (ph.length > PHOTO_LIMIT) return bad("Фото слишком тяжёлое, возьмите картинку поменьше.");
+        await store().set(photoKey(c.nick), ph);
+        f.photo = true;
+      } else {
+        if (f.photo) { try { await store().delete(photoKey(c.nick)); } catch (_) {} }
+        f.photo = false;
+      }
+      f.v = (f.v || 0) + 1;
+    }
     await persist(state);
     return ok({ card: pub(c), note: "Профиль сохранён." });
+  }
+
+  /* — фон-фото карты, лежит отдельным блобом — */
+  if (a === "face") {
+    const r = auth(state, body.nick, body.pin);
+    if (r.err) return bad(r.err, 401);
+    const f = r.card.face || {};
+    if (!f.photo) return ok({ photo: "", v: f.v || 0 });
+    const photo = await store().get(photoKey(r.card.nick));
+    return ok({ photo: photo || "", v: f.v || 0 });
   }
 
   /* — перевод — */
@@ -410,6 +453,7 @@ export default async (req) => {
     if (!c) return bad("Карта не найдена.");
     const snapshot = { nick: c.nick, num: c.num, mon: c.mon, alt: c.alt };
     delete state.cards[norm(c.nick)];
+    try { await store().delete(photoKey(snapshot.nick)); } catch (_) {}
     await persist(state);
     await notify("Карта закрыта", "Счёт удалён казначеем, игрок может открыть новый.", [
       { name: "Игрок", value: snapshot.nick, inline: true },

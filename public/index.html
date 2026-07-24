@@ -78,23 +78,48 @@ input.pin{font-family:var(--m);letter-spacing:.45em}
 .desk{display:grid;grid-template-columns:400px minmax(0,1fr);gap:34px;align-items:start;padding-top:8px}
 /* карта из первой версии */
 .plastic{position:relative;border-radius:20px;padding:24px;overflow:hidden;aspect-ratio:1.62;
-  --c1:#1E4A1C;--c2:#0E1A0F;--c3:#060906;--cg:61,190,56;
-  background:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%);
+  --c1:#1E4A1C;--c2:#0E1A0F;--c3:#060906;--cg:61,190,56;--photo:none;--dim:.5;--mix:.7;
+  --grad:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%);
+  background-color:#080A08;background-image:var(--grad);background-size:cover;
   border:1px solid rgba(var(--cg),.35);box-shadow:0 24px 54px -26px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.07);
-  display:flex;flex-direction:column;justify-content:space-between;transition:background .35s,border-color .35s}
+  display:flex;flex-direction:column;justify-content:space-between;transition:border-color .35s}
+/* палитры */
 .st-emerald{--c1:#1E4A1C;--c2:#0E1A0F;--c3:#060906;--cg:61,190,56}
 .st-obsidian{--c1:#333833;--c2:#161815;--c3:#050605;--cg:150,160,150}
 .st-gold{--c1:#59461A;--c2:#211A0A;--c3:#0A0704;--cg:227,195,90}
 .st-malachite{--c1:#0F4A3E;--c2:#08201B;--c3:#040A09;--cg:52,211,178}
 .st-ruby{--c1:#54181B;--c2:#1E0B0D;--c3:#080404;--cg:255,107,94}
 .st-azure{--c1:#173A5E;--c2:#0A1A28;--c3:#040709;--cg:90,168,255}
-.plastic::before{content:"";position:absolute;inset:0;
+/* виды градиента */
+.g-diag{--grad:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%)}
+.g-vert{--grad:linear-gradient(180deg,var(--c1) 0%,var(--c2) 58%,var(--c3) 100%)}
+.g-radial{--grad:radial-gradient(125% 135% at 16% 10%,var(--c1) 0%,var(--c2) 46%,var(--c3) 100%)}
+.g-conic{--grad:conic-gradient(from 205deg at 28% 18%,var(--c1),var(--c2) 38%,var(--c3) 68%,var(--c1) 100%)}
+.g-aurora{--grad:radial-gradient(70% 95% at 10% 6%,rgba(var(--cg),.5),transparent 62%),
+  radial-gradient(65% 85% at 92% 20%,var(--c1),transparent 64%),
+  radial-gradient(95% 125% at 55% 115%,var(--c2),transparent 72%),
+  linear-gradient(160deg,var(--c2),var(--c3))}
+.g-spot{--grad:radial-gradient(42% 58% at 80% 14%,rgba(255,255,255,.17),transparent 62%),
+  radial-gradient(85% 105% at 74% 8%,var(--c1) 0%,var(--c2) 46%,var(--c3) 100%)}
+/* слои своего фото */
+.pl-bg,.pl-shade,.pl-tint{position:absolute;inset:0;z-index:0;display:none;pointer-events:none}
+.plastic.has-photo .pl-bg{display:block;background-image:var(--photo);background-size:cover;background-position:center}
+.plastic.has-photo .pl-shade{display:block;background:#040604;opacity:var(--dim)}
+.plastic.has-photo .pl-tint{display:block;background-image:var(--grad);opacity:var(--mix)}
+.plastic.has-photo{background-image:none}
+.plastic::before{content:"";position:absolute;inset:0;z-index:1;
   background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.09) 47%,transparent 58%);
   transform:translateX(-30%);transition:transform .7s ease}
 .plastic:hover::before{transform:translateX(30%)}
-.plastic::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;border-radius:50%;
+.plastic::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;border-radius:50%;z-index:1;
   background:radial-gradient(circle,rgba(var(--cg),.28),transparent 65%)}
-.pl-top{display:flex;align-items:flex-start;gap:12px;position:relative;z-index:2}
+/* кнопка «три точки» */
+.pl-menu{position:absolute;top:12px;right:12px;z-index:4;width:30px;height:30px;border:0;padding:0;cursor:pointer;
+  border-radius:50%;background:rgba(255,255,255,.09);backdrop-filter:blur(4px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:.15s}
+.pl-menu:hover{background:rgba(255,255,255,.2)}
+.pl-menu i{width:3.5px;height:3.5px;border-radius:50%;background:rgba(255,255,255,.85);display:block}
+.pl-top{display:flex;align-items:flex-start;gap:12px;position:relative;z-index:2;padding-right:32px}
 .pl-top .bank{font-weight:800;font-size:14.5px}
 .pl-top .kind{font-family:var(--m);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
 .pl-flag{width:30px;height:20px;border-radius:3px;margin-left:auto;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
@@ -272,15 +297,39 @@ input.pin{font-family:var(--m);letter-spacing:.45em}
 .fine .swipe{flex-basis:100%}
 /* выбор дизайна карты */
 .skins{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.skin-opt{position:relative;border:0;padding:0;background:none;cursor:pointer;text-align:left}
-.skin-opt .sw{height:58px;border-radius:13px;border:1px solid rgba(var(--cg),.4);
-  background:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%);transition:.15s;position:relative;overflow:hidden}
+.skin-opt{position:relative;border:0;padding:0;background:none;cursor:pointer;text-align:left;
+  --grad:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%)}
+.skin-opt .sw{height:52px;border-radius:13px;border:1px solid rgba(var(--cg),.4);
+  background-image:var(--grad);background-size:cover;transition:.15s;position:relative;overflow:hidden}
 .skin-opt .sw::after{content:"";position:absolute;right:-14px;top:-14px;width:64px;height:64px;border-radius:50%;
   background:radial-gradient(circle,rgba(var(--cg),.3),transparent 65%)}
 .skin-opt span{display:block;font-size:12.5px;color:var(--muted);margin-top:7px}
 .skin-opt:hover .sw{transform:translateY(-2px)}
 .skin-opt.on .sw{box-shadow:0 0 0 2px var(--green)}
 .skin-opt.on span{color:var(--text);font-weight:600}
+/* шторка оформления */
+.sheet{position:fixed;inset:0;z-index:120;background:rgba(6,8,6,.72);backdrop-filter:blur(6px);
+  display:none;overflow-y:auto;padding:22px 16px 40px}
+.sheet.on{display:block}
+.sheet-in{max-width:430px;margin:0 auto;background:var(--p1);border-radius:22px;padding:20px}
+.sheet-head{display:flex;align-items:center;margin-bottom:16px}
+.sheet-head b{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sheet-x{margin-left:auto;background:var(--p2);border:0;color:var(--muted);width:34px;height:34px;
+  border-radius:50%;cursor:pointer;font-size:16px;line-height:1}
+.sheet-x:hover{background:var(--p3);color:var(--text)}
+.sheet .lbl{margin:18px 0 8px}
+.sheet .pick button{font-size:13px;padding:10px 14px}
+.pv{padding:15px;border-radius:15px;margin-bottom:4px}
+.pv .bank{font-size:11.5px}.pv .kind{font-size:8px}
+.pv .chip{width:32px;height:23px}
+.pv .pl-num{font-size:14px;letter-spacing:.11em}
+.pv .pl-bot .val{font-size:12px}.pv .pl-bot .lab{font-size:8px}
+.pv .pl-bot .bal b{font-size:16px}.pv .pl-bot .bal small{font-size:9px}
+.pv .pl-flag{width:24px;height:16px}
+.pv .pl-top{padding-right:0}
+.slid{display:flex;align-items:center;gap:12px}
+.slid input[type=range]{flex:1;width:auto;padding:0;background:none;border:0;accent-color:var(--green);cursor:pointer}
+.slid b{font-family:var(--m);font-size:12px;color:var(--muted);width:44px;text-align:right;font-weight:400}
 footer{padding:24px 26px 40px}
 .fbar{max-width:1180px;margin:0 auto;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between;
   font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim)}
@@ -362,6 +411,8 @@ footer{padding:24px 26px 40px}
  <div class="desk">
   <div>
     <div class="plastic" id="plastic">
+      <div class="pl-bg"></div><div class="pl-shade"></div><div class="pl-tint"></div>
+      <button class="pl-menu" id="faceBtn" title="Оформление карты" aria-label="Оформление карты"><i></i><i></i><i></i></button>
       <div class="pl-top">
         <div><div class="bank">БАНК СТАМОНИИ</div><div class="kind">Дебетовая · МОН / АЛТ</div></div>
         <svg class="pl-flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#060606"/><rect width="30" height="13.4" fill="#fff"/><rect width="30" height="6.7" fill="#2E9B2C"/></svg>
@@ -482,7 +533,8 @@ footer{padding:24px 26px 40px}
         </div>
         <div>
           <label class="lbl">Дизайн карты</label>
-          <div class="skins" id="skins"></div>
+          <div class="pick"><button type="button" id="faceOpen">Открыть оформление карты</button></div>
+          <p class="hint">Цвет, вид градиента и своё фото на карте. То же меню открывается по кнопке «⋮» в углу карты.</p>
         </div>
         <div><label class="lbl" for="profBioIn">Статус · до 60 символов</label>
           <input type="text" id="profBioIn" maxlength="60" placeholder="министр финансов · строю ратушу"></div>
@@ -597,6 +649,51 @@ footer{padding:24px 26px 40px}
 
 </main>
 
+<div class="sheet" id="faceSheet">
+  <div class="sheet-in">
+    <div class="sheet-head"><b>Оформление карты</b>
+      <button class="sheet-x" id="faceClose" aria-label="Закрыть">✕</button></div>
+
+    <div class="plastic pv" id="facePrev">
+      <div class="pl-bg"></div><div class="pl-shade"></div><div class="pl-tint"></div>
+      <div class="pl-top">
+        <div><div class="bank">БАНК СТАМОНИИ</div><div class="kind">Дебетовая · МОН / АЛТ</div></div>
+        <svg class="pl-flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#060606"/><rect width="30" height="13.4" fill="#fff"/><rect width="30" height="6.7" fill="#2E9B2C"/></svg>
+      </div>
+      <div class="chip"><i></i><i></i></div>
+      <div class="pl-num" id="pvNum">СФ 0000 0000</div>
+      <div class="pl-bot">
+        <div class="who"><div class="lab">Владелец</div><div class="val" id="pvNick">—</div></div>
+        <div class="bal"><b id="pvMon">0</b><small>МОН</small></div>
+      </div>
+    </div>
+
+    <label class="lbl">Цвет</label>
+    <div class="skins" id="skins"></div>
+
+    <label class="lbl">Вид градиента</label>
+    <div class="skins" id="grads"></div>
+
+    <label class="lbl">Своё фото на карте</label>
+    <div class="pick">
+      <button type="button" id="phFile">Загрузить фото</button>
+      <button type="button" id="phClear">Убрать фото</button>
+    </div>
+    <input type="file" id="phInput" accept="image/*" hidden>
+
+    <div id="phCtl" style="display:none">
+      <label class="lbl">Затемнение фото</label>
+      <div class="slid"><input type="range" id="dimRange" min="0" max="90" step="5"><b id="dimVal">50%</b></div>
+      <label class="lbl">Градиент поверх фото</label>
+      <div class="slid"><input type="range" id="mixRange" min="0" max="100" step="5"><b id="mixVal">70%</b></div>
+      <p class="hint">Ноль — чистое фото, сто — фото полностью под цветом градиента.</p>
+    </div>
+
+    <p class="msg" id="mFace"></p>
+    <button class="btn" id="faceSave" style="margin-top:14px">Сохранить оформление</button>
+  </div>
+</div>
+
 <footer><div class="fbar">
   <span>Государственный банк · Стамонийская Федерация</span>
   <span>1 Алтын = 16 МОН</span>
@@ -681,8 +778,7 @@ function avaHTML(av,nick,cls){
 }
 function render(){
   if(!card)return;
-  $("plastic").className="plastic st-"+(card.style||"emerald");
-  pickedStyle=null;paintStyles();
+  paintCard();ensurePhoto();
   $("plNum").textContent=card.num;$("plNick").textContent=card.nick;
   $("plMon").textContent=money(card.mon);
   $("plAva").innerHTML=avaHTML(card.avatar,card.nick,"pl-ava");
@@ -912,31 +1008,166 @@ function units(){
 }
 ["tCur","aCur","fCur"].forEach(id=>$(id).addEventListener("change",units));
 units();
-/* — дизайн карты — */
+/* — оформление карты: цвет, градиент, своё фото — */
 const CARD_STYLES=[
   ["emerald","Изумруд"],["obsidian","Обсидиан"],["gold","Золото"],
   ["malachite","Малахит"],["ruby","Рубин"],["azure","Лазурь"]
 ];
-let pickedStyle=null;
+const CARD_GRADS=[
+  ["diag","Диагональ"],["vert","Вертикаль"],["radial","Радиальный"],
+  ["conic","Конус"],["aurora","Аврора"],["spot","Блик"]
+];
+const PHOTO_MAX=260000;                 // столько же в bank.mjs
+let face={pal:"emerald",grad:"diag",dim:50,mix:70,photo:""};   // что показываем сейчас
+let photoEdit=null;                     // null — фото не трогали, "" — убрали, строка — новое
+
+/* фото храним в браузере, чтобы не тянуть его с сервера каждые 10 секунд */
+function photoCache(nick){
+  try{const r=JSON.parse(mem.get("face-"+nick)||"null");return r&&r.photo?r:null}catch(_){return null}
+}
+function savePhotoCache(nick,v,photo){
+  try{mem.set("face-"+nick,JSON.stringify({v,photo}))}catch(_){}
+}
+
+function faceFrom(c){
+  const f=(c&&c.face)||{};
+  const ph=c&&f.photo?(photoCache(c.nick)||{}).photo||"":"";
+  return {pal:(c&&c.style)||"emerald",grad:f.grad||"diag",
+    dim:typeof f.dim==="number"?f.dim:50,mix:typeof f.mix==="number"?f.mix:70,photo:ph};
+}
+function applyFace(el,f,extra){
+  el.className=(extra||"plastic")+" st-"+f.pal+" g-"+f.grad+(f.photo?" has-photo":"");
+  el.style.setProperty("--photo",f.photo?'url("'+f.photo+'")':"none");
+  el.style.setProperty("--dim",f.dim/100);
+  el.style.setProperty("--mix",f.mix/100);
+}
+function paintCard(){
+  if(!card)return;
+  face=faceFrom(card);
+  if(!$("faceSheet").classList.contains("on"))applyFace($("plastic"),face);  // пока открыта шторка, карту красит preview()
+}
+
+/* если фото поменяли с другого устройства — забираем его один раз */
+let photoBusy=false,photoTried=null;
+async function ensurePhoto(){
+  if(!card||!auth||photoBusy)return;
+  const f=card.face||{};
+  if(!f.photo){if(photoCache(card.nick))mem.del("face-"+card.nick);return}
+  const c=photoCache(card.nick);
+  if(c&&c.v===f.v)return;
+  if(photoTried===card.nick+":"+f.v)return;   // уже пробовали, не долбим сервер
+  photoTried=card.nick+":"+f.v;
+  photoBusy=true;
+  try{
+    const j=await api("face",auth);
+    if(j.photo){
+      savePhotoCache(card.nick,j.v,j.photo);paintCard();
+      if($("faceSheet").classList.contains("on")){
+        if(photoEdit===null&&!draft.photo)draft.photo=j.photo;
+        preview();
+      }
+    }
+  }catch(_){}finally{photoBusy=false}
+}
+
+/* кнопки выбора */
 CARD_STYLES.forEach(([id,name])=>{
   const b=document.createElement("button");
-  b.type="button";b.className="skin-opt st-"+id;b.dataset.style=id;
+  b.type="button";b.className="skin-opt st-"+id+" g-diag";b.dataset.pal=id;
   b.innerHTML='<div class="sw"></div><span>'+name+'</span>';
-  b.onclick=async()=>{
-    pickedStyle=id;paintStyles();
-    $("plastic").className="plastic st-"+id;
-    try{
-      const j=await api("profile",Object.assign({},auth,{avatar:card.avatar||"",bio:card.bio||"",
-        discordId:card.discordId||"",style:id}));
-      card=j.card;render();say($("mProf"),"Дизайн карты сохранён.","ok");
-    }catch(e){say($("mProf"),e.message,"err")}
-  };
+  b.onclick=()=>{draft.pal=id;preview()};
   $("skins").appendChild(b);
 });
-function paintStyles(){
-  const cur=pickedStyle||(card&&card.style)||"emerald";
-  document.querySelectorAll(".skin-opt").forEach(b=>b.classList.toggle("on",b.dataset.style===cur));
+CARD_GRADS.forEach(([id,name])=>{
+  const b=document.createElement("button");
+  b.type="button";b.className="skin-opt g-"+id;b.dataset.grad=id;
+  b.innerHTML='<div class="sw"></div><span>'+name+'</span>';
+  b.onclick=()=>{draft.grad=id;preview()};
+  $("grads").appendChild(b);
+});
+
+let draft={pal:"emerald",grad:"diag",dim:50,mix:70,photo:""};
+function preview(){
+  applyFace($("facePrev"),draft,"plastic pv");
+  applyFace($("plastic"),draft);          // сразу видно на настоящей карте
+  document.querySelectorAll("#skins .skin-opt").forEach(b=>{
+    b.classList.toggle("on",b.dataset.pal===draft.pal);
+    b.className=b.className.replace(/ g-\w+/,"")+" g-"+draft.grad;
+  });
+  document.querySelectorAll("#grads .skin-opt").forEach(b=>{
+    b.classList.toggle("on",b.dataset.grad===draft.grad);
+    b.className=b.className.replace(/ st-\w+/,"")+" st-"+draft.pal;
+  });
+  $("phCtl").style.display=draft.photo?"block":"none";
+  $("dimRange").value=draft.dim;$("dimVal").textContent=draft.dim+"%";
+  $("mixRange").value=draft.mix;$("mixVal").textContent=draft.mix+"%";
 }
+function openFace(){
+  if(!card)return;
+  draft=faceFrom(card);photoEdit=null;
+  $("pvNum").textContent=card.num;$("pvNick").textContent=card.nick;$("pvMon").textContent=money(card.mon);
+  say($("mFace"),"","");
+  $("faceSheet").classList.add("on");preview();
+}
+function closeFace(){$("faceSheet").classList.remove("on");paintCard()}
+$("faceBtn").onclick=openFace;
+$("faceOpen").onclick=openFace;
+$("faceClose").onclick=closeFace;
+$("faceSheet").addEventListener("click",e=>{if(e.target===$("faceSheet"))closeFace()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("faceSheet").classList.contains("on"))closeFace()});
+$("dimRange").oninput=e=>{draft.dim=+e.target.value;preview()};
+$("mixRange").oninput=e=>{draft.mix=+e.target.value;preview()};
+
+/* загрузка фото: режем по формату карты и жмём, пока не влезет */
+$("phFile").onclick=()=>$("phInput").click();
+$("phInput").onchange=e=>{
+  const f=e.target.files[0];e.target.value="";
+  if(!f)return;
+  if(!/^image\//.test(f.type))return say($("mFace"),"Это не картинка.","err");
+  const img=new Image(),u=URL.createObjectURL(f);
+  img.onload=()=>{
+    let W=900,out="";
+    for(let step=0;step<5;step++){
+      const H=Math.round(W/1.62),cv=document.createElement("canvas");
+      cv.width=W;cv.height=H;
+      const g=cv.getContext("2d");g.imageSmoothingQuality="high";
+      const s=Math.min(img.width/W,img.height/H),sw=W*s,sh=H*s;
+      g.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,0,0,W,H);
+      out=cv.toDataURL("image/jpeg",[.78,.68,.58,.48,.4][step]);
+      if(out.length<=PHOTO_MAX)break;
+      if(step>=2)W=Math.round(W*.8);
+    }
+    URL.revokeObjectURL(u);
+    if(out.length>PHOTO_MAX)return say($("mFace"),"Фото слишком тяжёлое, возьмите поменьше.","err");
+    draft.photo=out;photoEdit=out;preview();
+    say($("mFace"),"Фото готово — нажмите «Сохранить оформление».","ok");
+  };
+  img.onerror=()=>say($("mFace"),"Не смог прочитать картинку.","err");
+  img.src=u;
+};
+$("phClear").onclick=()=>{
+  if(!draft.photo)return;
+  draft.photo="";photoEdit="";preview();
+  say($("mFace"),"Фото убрано — нажмите «Сохранить оформление».","ok");
+};
+
+$("faceSave").onclick=async()=>{
+  const m=$("mFace"),b=$("faceSave");b.disabled=true;say(m,"Сохраняем…");
+  try{
+    const body=Object.assign({},auth,{avatar:card.avatar||"",bio:card.bio||"",
+      discordId:card.discordId||"",style:draft.pal,grad:draft.grad,dim:draft.dim,mix:draft.mix});
+    if(photoEdit!==null)body.photo=photoEdit;
+    const j=await api("profile",body);
+    card=j.card;
+    if(photoEdit!==null){
+      if(photoEdit)savePhotoCache(card.nick,(card.face||{}).v||0,photoEdit);
+      else mem.del("face-"+card.nick);
+      photoEdit=null;
+    }
+    render();say(m,"Оформление сохранено.","ok");
+    setTimeout(()=>{if($("faceSheet").classList.contains("on"))closeFace()},600);
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
 
 /* — профиль — */
 let pendingAva=null;
