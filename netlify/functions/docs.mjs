@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 
 const SALT = "stamonia-bank-salt";      // должен совпадать с bank.mjs
 const KEY = "state";
+const SIGN_LIMIT = 90000;      // ~65 КБ на подпись
 
 const docStore = () => getStore({ name: "sf-docs", consistency: "strong" });
 const bankStore = () => getStore({ name: "sf-bank", consistency: "strong" });
@@ -46,6 +47,7 @@ async function authOf(nick, pin) {
 function blank(nick) {
   return {
     nick, birthDate: "", birthPlace: "", city: "", job: "",
+    signature: "",
     verified: false, issued: stamp(), updatedAt: stamp(),
     license: { status: "none", number: "", until: "", issuedAt: "" }
   };
@@ -54,6 +56,7 @@ function pub(p, card) {
   return {
     nick: p.nick,
     birthDate: p.birthDate, birthPlace: p.birthPlace, city: p.city, job: p.job,
+    signature: p.signature || "",
     verified: !!p.verified, issued: p.issued, updatedAt: p.updatedAt,
     passportNo: "СФ " + digits(p.nick, 6),
     taxNo: digits("tax" + p.nick, 10),
@@ -105,6 +108,12 @@ export default async (req) => {
     p.birthPlace = cut(body.birthPlace, 40);
     p.city = cut(body.city, 40);
     p.job = cut(body.job, 40);
+    if (body.signature !== undefined) {
+      const sg = String(body.signature || "");
+      if (sg && sg.length > SIGN_LIMIT) return bad("Подпись слишком тяжёлая, нарисуйте проще.");
+      if (sg && !/^data:image\//.test(sg)) return bad("Неверная подпись.");
+      p.signature = sg;
+    }
     p.updatedAt = stamp();
     if (changed) p.verified = false;
     state.people[k] = p;
@@ -123,7 +132,7 @@ export default async (req) => {
     if (!isAdmin()) return bad("Неверный код.", 401);
     const rows = Object.values(state.people).map((p) => ({
       nick: p.nick, city: p.city, birthPlace: p.birthPlace, birthDate: p.birthDate,
-      verified: !!p.verified, updatedAt: p.updatedAt,
+      verified: !!p.verified, updatedAt: p.updatedAt, signed: !!p.signature,
       license: p.license || { status: "none" }, passportNo: "СФ " + digits(p.nick, 6)
     })).sort((x, y) => (x.verified === y.verified ? x.nick.localeCompare(y.nick) : x.verified ? 1 : -1));
     return ok({ people: rows });

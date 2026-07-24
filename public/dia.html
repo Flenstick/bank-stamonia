@@ -144,6 +144,18 @@ input:focus,select:focus{border-color:var(--green);background:var(--s1)}
 .lock-switch{margin-top:26px;font:inherit;font-size:13.5px;background:none;border:0;color:var(--muted);cursor:pointer}
 .lock-switch:hover{color:var(--green)}
 .nick-step{display:grid;gap:14px;text-align:left;margin-top:24px}
+/* подпись */
+.signpad{background:var(--s2);border-radius:16px;padding:10px;position:relative}
+.signpad canvas{display:block;width:100%;height:150px;border-radius:11px;cursor:crosshair;touch-action:none}
+.signpad .ghost-line{position:absolute;left:9%;right:9%;bottom:38px;border-bottom:1px dashed var(--s3);pointer-events:none}
+.signpad .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font-size:14px;pointer-events:none}
+.signrow{display:flex;gap:10px;margin-top:10px}
+.signrow button{flex:1;font:inherit;font-size:13.5px;font-weight:500;background:var(--s2);border:0;color:var(--muted);
+  border-radius:12px;padding:11px;cursor:pointer;transition:.15s}
+.signrow button:hover{background:var(--s3);color:var(--ink)}
+.doc .sign{position:absolute;left:26px;bottom:74px;height:46px;z-index:2;opacity:.95;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+.row .v img.signview{height:42px;display:block;margin-top:2px}
 footer{border-top:1px solid var(--line);padding:24px 28px 40px}
 .fbar{max-width:1120px;margin:0 auto;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between;
   font-size:12.5px;color:var(--dim)}
@@ -234,6 +246,18 @@ footer{border-top:1px solid var(--line);padding:24px 28px 40px}
           <div class="two">
             <div><label class="lbl" for="fCity">Город проживания</label><input type="text" id="fCity" maxlength="40" placeholder="Новый Кряж"></div>
             <div><label class="lbl" for="fJob">Занятие</label><input type="text" id="fJob" maxlength="40" placeholder="министр финансов"></div>
+          </div>
+          <div>
+            <label class="lbl">Личная подпись</label>
+            <div class="signpad" id="signPad">
+              <canvas id="signCv"></canvas>
+              <div class="ghost-line"></div>
+              <div class="ph" id="signPh">распишитесь здесь мышкой или пальцем</div>
+            </div>
+            <div class="signrow">
+              <button type="button" id="signClear">Стереть</button>
+              <button type="button" id="signUndo">Отменить штрих</button>
+            </div>
           </div>
           <button class="btn" id="doSave">Сохранить анкету</button>
         </div>
@@ -362,6 +386,7 @@ $("doLogout").onclick=()=>{auth=null;doc=null;clearInterval(pollTimer);openLock(
 
 function enter(){
   show("vDocs");render();
+  setTimeout(()=>sign.prepare(),60);
   clearInterval(pollTimer);pollTimer=setInterval(refresh,20000);
 }
 async function refresh(){
@@ -401,6 +426,7 @@ function cardHTML(){
       '<div class="sub">'+(doc.city?"г. "+esc(doc.city):"город не указан")+'</div>'+
       (doc.verified?'<div class="status"><i></i>Подтверждён администрацией</div>'
                    :'<div class="status wait"><i></i>На проверке</div>')+'</div>'+skin+
+      (doc.signature?'<img class="sign" src="'+esc(doc.signature)+'" alt="подпись">':'')+
       '<div class="foot"><div class="no"><small>Номер</small>'+esc(doc.passportNo)+'</div>'+live+'</div></div>';
   }
   if(tab==="gun"){
@@ -440,6 +466,7 @@ function render(){
       row("Место рождения",esc(doc.birthPlace))+
       row("Город проживания",esc(doc.city))+
       row("Занятие",esc(doc.job))+
+      row("Подпись",doc.signature?'<img class="signview" src="'+esc(doc.signature)+'" alt="подпись">':"")+
       row("Статус",doc.verified?'<span class="badge ok">Подтверждён</span>':'<span class="badge wait">На проверке</span>')+
       row("Выдан",esc(doc.issued))+row("Обновлён",esc(doc.updatedAt));
     $("editBox").style.display="block";
@@ -469,13 +496,70 @@ function render(){
   if(document.activeElement!==$("fBp"))$("fBp").value=doc.birthPlace||"";
   if(document.activeElement!==$("fCity"))$("fCity").value=doc.city||"";
   if(document.activeElement!==$("fJob"))$("fJob").value=doc.job||"";
+  if(sign.empty())sign.load(doc.signature||"");
 }
+
+/* — подпись — */
+const sign=(()=>{
+  const cv=$("signCv"),ph=$("signPh");
+  let ctx=null,strokes=[],cur=null,drawing=false,w=0,h=0,dpr=1;
+  function setup(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    w=cv.clientWidth;h=cv.clientHeight;
+    if(!w||!h)return false;
+    cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+    ctx=cv.getContext("2d");ctx.scale(dpr,dpr);
+    ctx.lineWidth=2.6;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#F2F4F1";
+    return true;
+  }
+  function repaint(){
+    if(!ctx)return;
+    ctx.clearRect(0,0,w,h);
+    ctx.lineWidth=2.6;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#F2F4F1";
+    strokes.forEach(st=>{
+      if(st.length<2)return;
+      ctx.beginPath();ctx.moveTo(st[0].x,st[0].y);
+      for(let i=1;i<st.length;i++)ctx.lineTo(st[i].x,st[i].y);
+      ctx.stroke();
+    });
+    ph.style.display=strokes.length?"none":"grid";
+  }
+  const pos=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+  cv.addEventListener("pointerdown",e=>{
+    if(!ctx&&!setup())return;
+    drawing=true;cv.setPointerCapture(e.pointerId);
+    cur=[pos(e)];strokes.push(cur);repaint();
+  });
+  cv.addEventListener("pointermove",e=>{if(drawing){cur.push(pos(e));repaint()}});
+  const stop=()=>{drawing=false;cur=null};
+  cv.addEventListener("pointerup",stop);cv.addEventListener("pointercancel",stop);
+  $("signClear").onclick=()=>{strokes=[];repaint()};
+  $("signUndo").onclick=()=>{strokes.pop();repaint()};
+  window.addEventListener("resize",()=>{if(setup())repaint()});
+  return{
+    prepare(){if(setup())repaint()},
+    load(dataUrl){
+      strokes=[];
+      if(!setup())return;
+      if(!dataUrl){repaint();return}
+      const im=new Image();
+      im.onload=()=>{ctx.clearRect(0,0,w,h);ctx.drawImage(im,0,0,w,h);ph.style.display="none"};
+      im.src=dataUrl;
+    },
+    value(){
+      if(!strokes.length)return null;           // не рисовали — не трогаем сохранённую
+      return cv.toDataURL("image/png");
+    },
+    empty(){return strokes.length===0}
+  };
+})();
 
 $("doSave").onclick=async()=>{
   const m=$("mSave"),b=$("doSave");b.disabled=true;say(m,"Сохраняем…");
   try{
     const j=await api("save",Object.assign({},auth,{birthDate:$("fBd").value,birthPlace:$("fBp").value,
-      city:$("fCity").value,job:$("fJob").value}));
+      city:$("fCity").value,job:$("fJob").value,
+      signature:sign.value()===null?undefined:sign.value()}));
     doc=j.doc;render();say(m,j.note,"ok");
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
@@ -512,7 +596,7 @@ function paint(people){
     const el=document.createElement("div");el.className="prow";
     el.innerHTML='<img src="'+skinHead(p.nick)+'" alt="">'+
       '<div class="who"><b>'+esc(p.nick)+'</b><span>'+esc(p.passportNo)+' · '+
-      (p.city?esc(p.city):"город не указан")+(p.birthPlace?" · род. "+esc(p.birthPlace):"")+'</span></div>'+
+      (p.city?esc(p.city):"город не указан")+(p.birthPlace?" · род. "+esc(p.birthPlace):"")+(p.signed?" · подписан":"")+'</span></div>'+
       '<span class="badge '+(p.verified?"ok":"wait")+'">'+(p.verified?"Подтверждён":"На проверке")+'</span>'+
       '<button class="mini">'+(p.verified?"Снять":"Подтвердить")+'</button>'+
       '<select><option value="none">Без лицензии</option><option value="active">Лицензия действует</option>'+
