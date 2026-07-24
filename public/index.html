@@ -28,6 +28,14 @@ header{position:sticky;top:0;z-index:50;background:rgba(12,13,12,.9);backdrop-fi
   border-radius:999px;padding:8px 17px;cursor:pointer;transition:.15s}
 .tbtn:hover{color:var(--text)}
 .tbtn.on{background:var(--green);color:#08130A;font-weight:700}
+.snd{margin-left:10px;background:var(--p1);border:0;border-radius:50%;width:38px;height:38px;
+  cursor:pointer;display:grid;place-items:center;transition:.15s;padding:0}
+.snd:hover{background:var(--p2)}
+.snd svg{width:19px;height:19px;stroke:var(--muted);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.snd.on svg{stroke:var(--green)}
+.snd svg .mute{display:none}
+.snd.off svg .wave{display:none}
+.snd.off svg .mute{display:block}
 main{max-width:1180px;margin:0 auto;padding:14px 26px 70px}
 .view{display:none}.view.on{display:block}
 h1{font-size:40px;line-height:1.05;letter-spacing:-.04em;font-weight:800;margin:22px 0 10px}
@@ -294,6 +302,9 @@ footer{padding:24px 26px 40px}
       <button class="tbtn" id="navCard">Моя карта</button>
       <button class="tbtn" id="navTre">Казна</button>
     </div>
+    <button class="snd" id="sndBtn" title="Звук операций" aria-label="Звук операций">
+      <svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7"/><path class="wave" d="M19 6a8.5 8.5 0 0 1 0 12"/><path class="mute" d="M16 9.5 21 15M21 9.5 16 15"/></svg>
+    </button>
   </div>
 </header>
 
@@ -630,7 +641,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&$("vLogin").classLis
 function enter(){show("vCard");render();clearInterval(timer);timer=setInterval(refresh,10000)}
 async function refresh(){
   if(!auth)return;
-  try{const j=await api("me",auth);card=j.card;if(j.settings)settings=j.settings;render();
+  try{const j=await api("me",auth);
+    if(card&&j.card&&(j.card.mon>card.mon||j.card.alt>card.alt))sfx.coin();
+    if(card&&j.card&&(j.card.fines||[]).length>(card.fines||[]).length)sfx.fail();
+    card=j.card;if(j.settings)settings=j.settings;render();
     $("syncTxt").textContent="синхронизировано в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
   }catch(_){$("syncTxt").textContent="нет связи, пробуем ещё раз"}
 }
@@ -724,6 +738,51 @@ function drawPayday(){
   tick();pdTimer=setInterval(tick,1000);
 }
 
+/* — звук — */
+const sfx=(()=>{
+  let ctx=null,on=mem.get("snd")!=="0";
+  const ac=()=>{
+    if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(_){return null}}
+    if(ctx.state==="suspended")ctx.resume();
+    return ctx;
+  };
+  const tone=(f,t0,dur,vol,type,slide)=>{
+    const c=ac();if(!c)return;
+    const o=c.createOscillator(),g=c.createGain();
+    o.type=type||"sine";o.frequency.setValueAtTime(f,c.currentTime+t0);
+    if(slide)o.frequency.exponentialRampToValueAtTime(slide,c.currentTime+t0+dur);
+    g.gain.setValueAtTime(0,c.currentTime+t0);
+    g.gain.linearRampToValueAtTime(vol,c.currentTime+t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t0+dur);
+    o.connect(g);g.connect(c.destination);
+    o.start(c.currentTime+t0);o.stop(c.currentTime+t0+dur+0.03);
+  };
+  const noise=(dur,vol)=>{
+    const c=ac();if(!c)return;
+    const n=Math.floor(c.sampleRate*dur),buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+    const src=c.createBufferSource();src.buffer=buf;
+    const bp=c.createBiquadFilter();bp.type="bandpass";
+    bp.frequency.setValueAtTime(420,c.currentTime);
+    bp.frequency.exponentialRampToValueAtTime(2600,c.currentTime+dur);
+    bp.Q.value=1.1;
+    const g=c.createGain();g.gain.setValueAtTime(vol,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+    src.connect(bp);bp.connect(g);g.connect(c.destination);src.start();
+  };
+  return{
+    get on(){return on},
+    toggle(){on=!on;mem.set("snd",on?"1":"0");if(on)this.tick();return on},
+    tick(){if(on)tone(1250,0,.05,.05,"square")},
+    launch(){if(!on)return;noise(.42,.13);tone(320,0,.4,.07,"triangle",760)},
+    ok(){if(!on)return;[[784,0],[1047,.09],[1319,.18]].forEach(([f,t])=>tone(f,t,.42,.13,"sine"));tone(1568,.18,.6,.05,"triangle")},
+    fail(){if(!on)return;tone(200,0,.18,.11,"sawtooth",150);tone(150,.17,.26,.09,"sawtooth",96)},
+    coin(){if(!on)return;tone(1180,0,.1,.09,"square");tone(1580,.07,.16,.07,"square")}
+  };
+})();
+$("sndBtn").onclick=()=>{const on=sfx.toggle();$("sndBtn").classList.toggle("on",on);$("sndBtn").classList.toggle("off",!on)};
+$("sndBtn").classList.toggle("on",sfx.on);$("sndBtn").classList.toggle("off",!sfx.on);
+
 /* — свайп-подтверждение — */
 const ROCKET='<svg viewBox="0 0 24 24"><path d="M12 3c2.6 2.2 4 5.2 4 8.4L12 16l-4-4.6C8 8.2 9.4 5.2 12 3z"/>'+
   '<path d="M8 13.5 5.5 19l4-2"/><path d="M16 13.5 18.5 19l-4-2"/><circle cx="12" cy="9" r="1.5"/></svg>';
@@ -744,19 +803,26 @@ function makeSwipe(host,opts){
   };
   async function fire(){
     if(busy)return;
-    busy=true;host.classList.add("busy");measure();put(max);
+    busy=true;host.classList.add("busy");measure();put(max);sfx.launch();
     txt.textContent=opts.sending||"Отправляем…";
     try{await opts.run();host.classList.remove("busy");host.classList.add("done");
-      txt.textContent=opts.done||"Готово";
+      sfx.ok();txt.textContent=opts.done||"Готово";
       setTimeout(()=>reset(),1300);
-    }catch(_){host.classList.remove("busy");reset("fail")}
+    }catch(_){host.classList.remove("busy");sfx.fail();reset("fail")}
   }
   host.addEventListener("pointerdown",e=>{
     if(busy)return;
     measure();dragging=true;startX=e.clientX-x;
     host.classList.add("drag");host.setPointerCapture(e.pointerId);
   });
-  host.addEventListener("pointermove",e=>{if(dragging)put(e.clientX-startX)});
+  let armedSnd=false;
+  host.addEventListener("pointermove",e=>{
+    if(!dragging)return;
+    put(e.clientX-startX);
+    const near=x>=max*0.85;
+    if(near&&!armedSnd){armedSnd=true;sfx.tick()}
+    if(!near)armedSnd=false;
+  });
   const end=()=>{
     if(!dragging)return;dragging=false;host.classList.remove("drag");
     if(x>=max*0.85)fire();else put(0);
