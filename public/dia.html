@@ -3,53 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Дія Стамонії — цифровые документы</title>
+<meta name="color-scheme" content="dark">
+<meta name="darkreader-lock">
+<title>МоиДокументы — Стамонийская Федерация</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#FFFFFF;--ink:#000000;--ink-2:#1C1C1E;--muted:#8A8A8E;--line:#E8E8EA;--soft:#F4F4F6;
-  --green:#2E9B2C;--green-dark:#1C6E1B;--red:#D93A2B;--gold:#C79A16;
+  --bg:#0B0C0B;--p1:#14161400;--s1:#141614;--s2:#1C1F1C;--s3:#262A25;
+  --line:#22261F;--ink:#F2F4F1;--muted:#8B948A;--dim:#5C645B;
+  --green:#3DBE38;--green-flag:#2E9B2C;--gold:#E3C35A;--red:#FF6B5E;
   --f:"Onest",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);line-height:1.5;
   -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
-::selection{background:var(--green);color:#fff}
-header{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.9);backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--line)}
-.hbar{max-width:1120px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;gap:13px}
-.flag{width:32px;height:22px;border-radius:4px;box-shadow:0 0 0 1px var(--line)}
-.brand{font-weight:800;font-size:17px;letter-spacing:-.03em}
+::selection{background:var(--green);color:#08130A}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:9px}
+header{position:sticky;top:0;z-index:40;background:rgba(11,12,11,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.hbar{max-width:1120px;margin:0 auto;padding:15px 28px;display:flex;align-items:center;gap:13px}
+.flag{width:32px;height:22px;border-radius:4px}
+.brand{font-weight:800;font-size:16.5px;letter-spacing:-.03em}
 .brand span{color:var(--muted);font-weight:500}
-.hact{margin-left:auto;display:flex;gap:8px}
-.ghost{font:inherit;font-size:14px;font-weight:500;background:var(--soft);border:0;color:var(--ink-2);
-  border-radius:12px;padding:10px 16px;cursor:pointer;transition:.15s}
-.ghost:hover{background:#EAEAEE}
-.ghost.on{background:var(--ink);color:#fff}
-main{max-width:1120px;margin:0 auto;padding:34px 28px 90px}
+.hact{margin-left:auto;display:flex;gap:6px;background:var(--s1);padding:5px;border-radius:999px}
+.ghost{font:inherit;font-size:13.5px;font-weight:500;background:transparent;border:0;color:var(--muted);
+  border-radius:999px;padding:8px 16px;cursor:pointer;transition:.15s}
+.ghost:hover{color:var(--ink)}
+.ghost.on{background:var(--green);color:#08130A;font-weight:700}
+.ghost.plain{background:var(--s1);border-radius:13px;padding:11px 17px;color:var(--muted)}
+.ghost.plain:hover{background:var(--s2);color:var(--ink)}
+main{max-width:1120px;margin:0 auto;padding:32px 28px 90px}
 .view{display:none}.view.on{display:block}
-h1{font-size:46px;font-weight:800;letter-spacing:-.045em;line-height:1.02;margin:0 0 12px}
-.lede{color:var(--muted);font-size:17px;max-width:50ch;margin:0 0 32px}
-/* вход */
-.auth{max-width:400px;background:var(--soft);border-radius:24px;padding:28px}
-.auth h2{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
-.auth p{color:var(--muted);font-size:14px;margin:0 0 20px}
-label.lbl{display:block;font-size:13px;color:var(--muted);margin-bottom:7px;font-weight:500}
-input,select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fff;
-  border:1.5px solid var(--line);border-radius:14px;padding:13px 15px;outline:0;transition:.15s}
-input::placeholder{color:#B8B8BC}
-input:focus,select:focus{border-color:var(--ink)}
-input.pin{letter-spacing:.4em;font-weight:600}
-.btn{font:inherit;font-weight:700;font-size:16px;background:var(--ink);color:#fff;border:0;
+h1{font-size:44px;font-weight:800;letter-spacing:-.045em;line-height:1.03;margin:0 0 12px}
+.lede{color:var(--muted);font-size:16.5px;max-width:50ch;margin:0 0 30px}
+label.lbl{display:block;font-size:12.5px;color:var(--muted);margin-bottom:7px;font-weight:500}
+input,select{width:100%;font:inherit;font-size:15.5px;color:var(--ink);background:var(--s2);
+  border:1px solid transparent;border-radius:14px;padding:13px 15px;outline:0;transition:.15s}
+input::placeholder{color:var(--dim)}
+input:focus,select:focus{border-color:var(--green);background:var(--s1)}
+.btn{font:inherit;font-weight:700;font-size:15.5px;background:var(--green);color:#08130A;border:0;
   border-radius:14px;padding:15px 22px;cursor:pointer;width:100%;transition:.14s}
-.btn:hover{background:#2A2A2C}.btn:active{transform:scale(.985)}
-.btn:disabled{background:#C8C8CC;cursor:not-allowed}
-.btn.green{background:var(--green)}.btn.green:hover{background:var(--green-dark)}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.985)}
+.btn:disabled{background:var(--s3);color:var(--dim);cursor:not-allowed}
 .stack{display:grid;gap:14px}
 .msg{font-size:13.5px;margin:14px 0 0;min-height:19px;color:var(--muted)}
-.msg.err{color:var(--red)}.msg.ok{color:var(--green-dark)}
+.msg.err{color:var(--red)}.msg.ok{color:var(--green)}
 /* документы */
 .top{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
 .top h1{margin:0}
@@ -57,39 +56,37 @@ input.pin{letter-spacing:.4em;font-weight:600}
 .upd i{width:7px;height:7px;border-radius:50%;background:var(--green);display:block;animation:pulse 2.4s infinite}
 @keyframes pulse{50%{opacity:.25}}
 .chips{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:26px}
-.chip{font:inherit;font-size:14.5px;font-weight:500;background:var(--soft);border:0;color:var(--ink-2);
+.chip{font:inherit;font-size:14.5px;font-weight:500;background:var(--s1);border:0;color:var(--muted);
   border-radius:999px;padding:11px 19px;cursor:pointer;transition:.15s}
-.chip:hover{background:#EAEAEE}
-.chip.on{background:var(--ink);color:#fff;font-weight:600}
+.chip:hover{background:var(--s2);color:var(--ink)}
+.chip.on{background:var(--ink);color:#0B0C0B;font-weight:700}
 .docs{display:grid;grid-template-columns:420px minmax(0,1fr);gap:44px;align-items:start}
-/* карточка документа */
 .doc{position:relative;border-radius:30px;padding:26px;color:#fff;overflow:hidden;min-height:270px;
   display:flex;flex-direction:column;justify-content:space-between;
-  box-shadow:0 30px 60px -34px rgba(0,0,0,.45)}
-.doc.pass{background:linear-gradient(150deg,#2E9B2C 0%,#1C6E1B 55%,#0F4A11 100%)}
-.doc.gun{background:linear-gradient(150deg,#2C2C2E 0%,#151516 60%,#000 100%)}
-.doc.tax{background:linear-gradient(150deg,#F0F0F2 0%,#DDDDE1 100%);color:var(--ink)}
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}
+.doc.pass{background:linear-gradient(150deg,#2E9B2C 0%,#17641A 55%,#0B3D10 100%)}
+.doc.gun{background:linear-gradient(150deg,#2A2D29 0%,#16181500 60%,#0A0C0A 100%);border:1px solid #2C312B}
+.doc.tax{background:linear-gradient(150deg,#2A2519 0%,#1A1710 60%,#0D0B07 100%);border:1px solid #3A3325}
 .doc::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.22) 48%,transparent 58%);
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 48%,transparent 58%);
   transform:translateX(-120%);animation:holo 5.5s ease-in-out infinite}
 @keyframes holo{0%,62%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
-.doc .kind{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;opacity:.85}
+.doc .kind{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;opacity:.82}
 .doc .who{font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1.06;margin-top:5px}
-.doc .sub{font-size:13.5px;opacity:.85;margin-top:4px}
+.doc .sub{font-size:13.5px;opacity:.8;margin-top:4px}
 .doc .skin{position:absolute;right:18px;top:52px;height:150px;image-rendering:pixelated;
-  filter:drop-shadow(0 12px 18px rgba(0,0,0,.4));z-index:1}
+  filter:drop-shadow(0 12px 20px rgba(0,0,0,.55));z-index:1}
 .doc .foot{display:flex;align-items:flex-end;gap:12px;position:relative;z-index:2}
 .doc .no{font-size:15px;font-weight:600;letter-spacing:.06em}
-.doc .no small{display:block;font-size:11px;font-weight:500;opacity:.7;letter-spacing:.1em;text-transform:uppercase}
-.doc .live{margin-left:auto;text-align:right;font-size:12.5px;opacity:.9}
-.doc .live b{display:block;font-size:19px;font-weight:700;letter-spacing:-.01em}
-.status{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);
+.doc .no small{display:block;font-size:10.5px;font-weight:500;opacity:.65;letter-spacing:.11em;text-transform:uppercase}
+.doc .live{margin-left:auto;text-align:right;font-size:12.5px;opacity:.85}
+.doc .live b{display:block;font-size:19px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.doc.tax .kind,.doc.tax .no small{color:var(--gold);opacity:1}
+.status{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.14);
   border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:600;margin-top:14px;position:relative;z-index:2}
-.status i{width:7px;height:7px;border-radius:50%;background:#7DFF77;display:block}
-.status.wait i{background:#FFD966}
-.status.no i{background:#FF8A80}
-.doc.tax .status{background:rgba(0,0,0,.07)}
-.doc.tax .status i{background:var(--green)}
+.status i{width:7px;height:7px;border-radius:50%;background:#8BFF85;display:block}
+.status.wait i{background:var(--gold)}
+.status.no i{background:var(--red)}
 /* данные */
 .data h2{font-size:22px;font-weight:800;letter-spacing:-.03em;margin:0 0 4px}
 .data .hint{color:var(--muted);font-size:14px;margin:0 0 22px}
@@ -97,47 +94,107 @@ input.pin{letter-spacing:.4em;font-weight:600}
 .row{display:flex;gap:18px;padding:15px 2px;border-bottom:1px solid var(--line);align-items:baseline}
 .row .k{color:var(--muted);font-size:14px;flex:none;width:190px}
 .row .v{font-size:15.5px;font-weight:500;flex:1;min-width:0}
-.row .v.empty{color:#B8B8BC;font-weight:400}
-.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;
-  font-size:12.5px;font-weight:600;background:var(--soft)}
-.badge.ok{background:#E7F6E6;color:var(--green-dark)}
-.badge.wait{background:#FFF6DF;color:#8A6A00}
-.badge.no{background:#FDEBE9;color:var(--red)}
-.edit{margin-top:26px;background:var(--soft);border-radius:22px;padding:24px}
+.row .v.empty{color:var(--dim);font-weight:400}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:600}
+.badge.ok{background:rgba(61,190,56,.14);color:var(--green)}
+.badge.wait{background:rgba(227,195,90,.14);color:var(--gold)}
+.badge.no{background:rgba(255,107,94,.14);color:var(--red)}
+.edit{margin-top:26px;background:var(--s1);border-radius:22px;padding:24px}
 .edit h3{font-size:17px;font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
 .edit p.small{color:var(--muted);font-size:13.5px;margin:0 0 18px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-/* админ */
-.plist{display:grid;gap:10px;max-width:900px}
-.prow{display:flex;align-items:center;gap:15px;background:var(--soft);border-radius:18px;padding:14px 18px;flex-wrap:wrap}
-.prow img{width:38px;height:38px;border-radius:11px;image-rendering:pixelated;background:#fff}
-.prow .who{flex:1;min-width:150px}
+/* реестр */
+.plist{display:grid;gap:10px;max-width:940px}
+.prow{display:flex;align-items:center;gap:15px;background:var(--s1);border-radius:18px;padding:14px 18px;flex-wrap:wrap}
+.prow img{width:38px;height:38px;border-radius:11px;image-rendering:pixelated;background:var(--s2)}
+.prow .who{flex:1;min-width:160px}
 .prow .who b{display:block;font-size:15.5px;font-weight:600}
 .prow .who span{font-size:13px;color:var(--muted)}
-.prow .mini{font:inherit;font-size:13px;font-weight:500;background:#fff;border:1.5px solid var(--line);
-  color:var(--ink-2);border-radius:11px;padding:8px 13px;cursor:pointer;transition:.15s}
-.prow .mini:hover{border-color:var(--ink)}
-.prow .mini.gone{color:var(--red);border-color:#F3D2CE}
-.prow select{width:auto;padding:8px 12px;font-size:13px;border-radius:11px}
-footer{border-top:1px solid var(--line);padding:26px}
+.mini{font:inherit;font-size:13px;font-weight:500;background:var(--s2);border:0;color:var(--muted);
+  border-radius:11px;padding:9px 13px;cursor:pointer;transition:.15s}
+.mini:hover{background:var(--s3);color:var(--ink)}
+.mini.gone:hover{background:rgba(255,107,94,.15);color:var(--red)}
+.prow select{width:auto;padding:9px 12px;font-size:13px;border-radius:11px;background:var(--s2)}
+.auth{max-width:420px;background:var(--s1);border-radius:24px;padding:26px}
+.auth h2{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
+.auth p{color:var(--muted);font-size:14px;margin:0 0 20px}
+/* полноэкранный вход */
+.lock{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;overflow-y:auto}
+.lock.on{display:grid;place-items:center}
+.lock-in{width:100%;max-width:340px;padding:34px 22px;text-align:center}
+.lock-flag{width:52px;height:35px;border-radius:6px;margin:0 auto 22px;display:block}
+.lock-in h2{font-size:24px;font-weight:800;letter-spacing:-.03em;margin:0}
+.lock-in .who{font-size:14px;color:var(--green);margin:7px 0 0;font-weight:600}
+.lock-in .ask{font-size:14px;color:var(--muted);margin:26px 0 18px}
+.dots{display:flex;gap:16px;justify-content:center;margin-bottom:12px}
+.dots i{width:15px;height:15px;border-radius:50%;background:var(--s2);display:block;transition:.15s}
+.dots i.f{background:var(--green);transform:scale(1.1)}
+.dots.bad i.f{background:var(--red)}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.lock-msg{font-size:13.5px;min-height:20px;margin:0 0 20px;color:var(--muted)}
+.lock-msg.err{color:var(--red)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;max-width:290px;margin:0 auto}
+.pad button{font:inherit;font-size:25px;font-weight:600;color:var(--ink);background:var(--s1);border:0;
+  border-radius:50%;aspect-ratio:1;cursor:pointer;transition:.1s;font-variant-numeric:tabular-nums}
+.pad button:hover{background:var(--s2)}
+.pad button:active{transform:scale(.93);background:var(--green);color:#08130A}
+.pad button.aux{font-size:14px;font-weight:500;background:transparent;color:var(--muted)}
+.pad button.aux:hover{color:var(--ink);background:transparent}
+.lock-switch{margin-top:26px;font:inherit;font-size:13.5px;background:none;border:0;color:var(--muted);cursor:pointer}
+.lock-switch:hover{color:var(--green)}
+.nick-step{display:grid;gap:14px;text-align:left;margin-top:24px}
+footer{border-top:1px solid var(--line);padding:24px 28px 40px}
 .fbar{max-width:1120px;margin:0 auto;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between;
-  font-size:12.5px;color:var(--muted)}
-.fbar a{color:var(--ink);text-decoration:none;font-weight:500}
+  font-size:12.5px;color:var(--dim)}
+.fbar a{color:var(--green);text-decoration:none;font-weight:500}
 @media(max-width:940px){
   .docs{grid-template-columns:1fr;gap:30px}
   .two{grid-template-columns:1fr}
-  h1{font-size:34px}
-  .row .k{width:130px}
+  h1{font-size:33px}
+  .row .k{width:135px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
+<div class="lock on" id="lock">
+  <div class="lock-in">
+    <svg class="lock-flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#060606"/><rect width="30" height="13.4" fill="#fff"/><rect width="30" height="6.7" fill="#2E9B2C"/></svg>
+    <h2>МоиДокументы</h2>
+    <p class="who" id="lockNick">Стамонийская Федерация</p>
+
+    <div id="stepNick" style="display:none">
+      <div class="nick-step">
+        <div><label class="lbl" for="lNick">Ваш ник в Minecraft</label>
+          <input type="text" id="lNick" maxlength="32" autocomplete="off" placeholder="Steve"></div>
+        <button class="btn" id="doNick">Продолжить</button>
+      </div>
+      <p class="lock-msg" id="nickMsg" style="margin-top:16px"></p>
+    </div>
+
+    <div id="stepPin">
+      <p class="ask">Введите ПИН-код</p>
+      <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+      <p class="lock-msg" id="lockMsg"></p>
+      <div class="pad" id="pad">
+        <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+        <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+        <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+        <button type="button" class="aux" data-act="clear">Стереть</button>
+        <button type="button">0</button>
+        <button type="button" class="aux" data-act="back">←</button>
+      </div>
+      <button class="lock-switch" id="lockSwitch">Войти под другим ником</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="hbar">
     <svg class="flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#060606"/><rect width="30" height="13.4" fill="#fff"/><rect width="30" height="6.7" fill="#2E9B2C"/></svg>
-    <div class="brand">Дія <span>Стамонії</span></div>
+    <div class="brand">МоиДокументы <span>· СФ</span></div>
     <div class="hact">
       <button class="ghost" id="navDocs">Документы</button>
       <button class="ghost" id="navAdm">Реестр</button>
@@ -147,22 +204,7 @@ footer{border-top:1px solid var(--line);padding:26px}
 
 <main>
 
-<section class="view on" id="vLogin">
-  <h1>Документы<br>гражданина</h1>
-  <p class="lede">Паспорт, лицензия на оружие и налоговый номер — в одном месте. Вход по нику и ПИНу из банка.</p>
-  <div class="auth">
-    <h2>Вход</h2>
-    <p>Тот же ник и ПИН, что и в банке Стамонии.</p>
-    <div class="stack">
-      <div><label class="lbl" for="lNick">Ник</label><input type="text" id="lNick" maxlength="32" autocomplete="off" placeholder="Steve"></div>
-      <div><label class="lbl" for="lPin">ПИН · 4 цифры</label><input type="password" id="lPin" class="pin" inputmode="numeric" maxlength="4" placeholder="••••"></div>
-      <button class="btn" id="doLogin">Войти</button>
-    </div>
-    <p class="msg" id="mLogin"></p>
-  </div>
-</section>
-
-<section class="view" id="vDocs">
+<section class="view on" id="vDocs">
   <div class="top">
     <h1>Документы</h1>
     <div class="upd"><i></i><span id="updTxt">обновлено только что</span></div>
@@ -176,7 +218,6 @@ footer{border-top:1px solid var(--line);padding:26px}
 
   <div class="docs">
     <div id="cardBox"></div>
-
     <div class="data">
       <h2 id="dataTitle">Паспорт гражданина</h2>
       <p class="hint" id="dataHint">Данные заполняете вы, подтверждает администрация Федерации.</p>
@@ -187,19 +228,19 @@ footer{border-top:1px solid var(--line);padding:26px}
         <p class="small">После изменений паспорт снова уйдёт на проверку.</p>
         <div class="stack">
           <div class="two">
-            <div><label class="lbl" for="fBd">Дата рождения</label><input type="text" id="fBd" maxlength="10" placeholder="14.03.2011"></div>
+            <div><label class="lbl" for="fBd">Дата рождения</label><input type="text" id="fBd" maxlength="10" inputmode="numeric" placeholder="14.03.2011"></div>
             <div><label class="lbl" for="fBp">Место рождения</label><input type="text" id="fBp" maxlength="40" placeholder="Стамонград"></div>
           </div>
           <div class="two">
             <div><label class="lbl" for="fCity">Город проживания</label><input type="text" id="fCity" maxlength="40" placeholder="Новый Кряж"></div>
             <div><label class="lbl" for="fJob">Занятие</label><input type="text" id="fJob" maxlength="40" placeholder="министр финансов"></div>
           </div>
-          <button class="btn green" id="doSave">Сохранить анкету</button>
+          <button class="btn" id="doSave">Сохранить анкету</button>
         </div>
         <p class="msg" id="mSave"></p>
       </div>
 
-      <button class="ghost" style="margin-top:22px" id="doLogout">Выйти</button>
+      <button class="ghost plain" style="margin-top:22px" id="doLogout">Выйти</button>
     </div>
   </div>
 </section>
@@ -221,7 +262,7 @@ footer{border-top:1px solid var(--line);padding:26px}
   <div id="admBody" style="display:none">
     <div class="plist" id="plist"></div>
     <p class="msg" id="mAct"></p>
-    <button class="ghost" style="margin-top:20px" id="admForget">Выйти из реестра</button>
+    <button class="ghost plain" style="margin-top:20px" id="admForget">Выйти из реестра</button>
   </div>
 </section>
 
@@ -230,7 +271,7 @@ footer{border-top:1px solid var(--line);padding:26px}
 <footer><div class="fbar">
   <span>Реестр граждан · Стамонийская Федерация</span>
   <a href="/">Банк Стамонии</a>
-  <span>Документ действителен с живыми часами</span>
+  <span>Живые часы на карточке — защита от скриншота</span>
 </div></footer>
 
 <script>
@@ -253,23 +294,71 @@ async function api(action,data){
 }
 const esc=s=>String(s||"").replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));
 function say(el,m,c){el.className="msg "+(c||"");el.textContent=m}
-function show(v){["vLogin","vDocs","vAdm"].forEach(x=>$(x).classList.toggle("on",x===v));
-  $("navDocs").classList.toggle("on",v!=="vAdm");$("navAdm").classList.toggle("on",v==="vAdm")}
-$("navDocs").onclick=()=>show(auth?"vDocs":"vLogin");
+function show(v){["vDocs","vAdm"].forEach(x=>$(x).classList.toggle("on",x===v));
+  $("navDocs").classList.toggle("on",v==="vDocs");$("navAdm").classList.toggle("on",v==="vAdm")}
+$("navDocs").onclick=()=>{if(!auth)return openLock();show("vDocs")};
 $("navAdm").onclick=()=>{show("vAdm");admAuto()};
 
-/* — вход — */
-$("doLogin").onclick=async()=>{
-  const m=$("mLogin"),b=$("doLogin");b.disabled=true;say(m,"Проверяем…");
-  try{
-    const nick=$("lNick").value.trim(),pin=$("lPin").value.trim();
-    const j=await api("login",{nick,pin});
-    auth={nick,pin};doc=j.doc;mem.set("nick",nick);say(m,"","");enter();
-  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+/* — полноэкранный вход — */
+let buf="",busy=false,pendingNick="";
+function openLock(){
+  $("lock").classList.add("on");
+  const n=mem.get("nick");
+  if(n){pendingNick=n;stepPin(n)}else stepNick();
+}
+function closeLock(){$("lock").classList.remove("on")}
+function stepNick(){
+  $("stepNick").style.display="block";$("stepPin").style.display="none";
+  $("lockNick").textContent="Стамонийская Федерация";
+  $("lNick").value=mem.get("nick")||"";setTimeout(()=>$("lNick").focus(),80);
+}
+function stepPin(nick){
+  $("stepNick").style.display="none";$("stepPin").style.display="block";
+  $("lockNick").textContent=nick;
+  buf="";busy=false;paintDots();say($("lockMsg"),"","");
+  $("lockMsg").className="lock-msg";
+}
+$("doNick").onclick=()=>{
+  const n=$("lNick").value.trim();
+  if(n.length<3){$("nickMsg").className="lock-msg err";$("nickMsg").textContent="Ник от 3 символов.";return}
+  $("nickMsg").textContent="";pendingNick=n;stepPin(n);
 };
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&$("vLogin").classList.contains("on"))$("doLogin").click()});
-$("doLogout").onclick=()=>{auth=null;doc=null;clearInterval(pollTimer);show("vLogin")};
-if(mem.get("nick"))$("lNick").value=mem.get("nick");
+$("lNick").addEventListener("keydown",e=>{if(e.key==="Enter")$("doNick").click()});
+$("lockSwitch").onclick=()=>{mem.del("nick");stepNick()};
+function paintDots(bad){
+  const d=$("dots");d.classList.toggle("bad",!!bad);
+  [...d.children].forEach((el,i)=>el.classList.toggle("f",i<buf.length));
+}
+function tap(n){if(busy||buf.length>=4)return;buf+=n;paintDots();if(buf.length===4)submitPin()}
+async function submitPin(){
+  busy=true;
+  $("lockMsg").className="lock-msg";$("lockMsg").textContent="Проверяем…";
+  try{
+    const j=await api("login",{nick:pendingNick,pin:buf});
+    auth={nick:pendingNick,pin:buf};doc=j.doc;mem.set("nick",pendingNick);
+    closeLock();enter();buf="";paintDots();$("lockMsg").textContent="";
+  }catch(e){
+    $("lockMsg").className="lock-msg err";$("lockMsg").textContent=e.message;
+    paintDots(true);
+    const inn=document.querySelector(".lock-in");
+    inn.classList.add("shake");setTimeout(()=>inn.classList.remove("shake"),420);
+    setTimeout(()=>{buf="";busy=false;paintDots()},420);
+  }
+}
+$("pad").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const act=b.dataset.act;
+  if(act==="clear"){buf="";paintDots();return}
+  if(act==="back"){buf=buf.slice(0,-1);paintDots();return}
+  tap(b.textContent.trim());
+});
+document.addEventListener("keydown",e=>{
+  if(!$("lock").classList.contains("on")||$("stepPin").style.display==="none")return;
+  if(/^\d$/.test(e.key))tap(e.key);
+  else if(e.key==="Backspace"){buf=buf.slice(0,-1);paintDots()}
+  else if(e.key==="Escape"){buf="";paintDots()}
+});
+$("doLogout").onclick=()=>{auth=null;doc=null;clearInterval(pollTimer);openLock()};
 
 function enter(){
   show("vDocs");render();
@@ -282,72 +371,63 @@ async function refresh(){
   }catch(_){$("updTxt").textContent="нет связи"}
 }
 
-/* — переключение документов — */
+/* — маска даты — */
+$("fBd").addEventListener("input",e=>{
+  let v=e.target.value.replace(/\D/g,"").slice(0,8),out=v.slice(0,2);
+  if(v.length>2)out+="."+v.slice(2,4);
+  if(v.length>4)out+="."+v.slice(4,8);
+  e.target.value=out;
+});
+
 document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
   document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
   c.classList.add("on");tab=c.dataset.doc;render();
 });
 
-/* — карточки — */
 const skinBody=n=>"https://mc-heads.net/body/"+encodeURIComponent(n)+"/150";
 const skinHead=n=>"https://mc-heads.net/avatar/"+encodeURIComponent(n)+"/64";
-
 function liveClock(){
   const d=new Date(),p=n=>String(n).padStart(2,"0");
   return{t:p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds()),
          d:p(d.getDate())+"."+p(d.getMonth()+1)+"."+d.getFullYear()};
 }
-function statusPass(){
-  return doc.verified
-    ?'<div class="status"><i></i>Подтверждён администрацией</div>'
-    :'<div class="status wait"><i></i>На проверке</div>';
-}
 function cardHTML(){
-  const c=liveClock();
+  const c=liveClock(),L=doc.license||{status:"none"};
+  const skin='<img class="skin" src="'+skinBody(doc.nick)+'" alt="">';
+  const live='<div class="live"><b class="clk">'+c.t+'</b>'+c.d+'</div>';
   if(tab==="pass"){
-    return '<div class="doc pass">'+
-      '<div><div class="kind">Паспорт гражданина</div>'+
+    return '<div class="doc pass"><div><div class="kind">Паспорт гражданина</div>'+
       '<div class="who">'+esc(doc.nick)+'</div>'+
       '<div class="sub">'+(doc.city?"г. "+esc(doc.city):"город не указан")+'</div>'+
-      statusPass()+'</div>'+
-      '<img class="skin" src="'+skinBody(doc.nick)+'" alt="">'+
-      '<div class="foot"><div class="no"><small>Номер</small>'+esc(doc.passportNo)+'</div>'+
-      '<div class="live"><b class="clk">'+c.t+'</b>'+c.d+'</div></div></div>';
+      (doc.verified?'<div class="status"><i></i>Подтверждён администрацией</div>'
+                   :'<div class="status wait"><i></i>На проверке</div>')+'</div>'+skin+
+      '<div class="foot"><div class="no"><small>Номер</small>'+esc(doc.passportNo)+'</div>'+live+'</div></div>';
   }
   if(tab==="gun"){
-    const L=doc.license||{status:"none"};
     const st=L.status==="active"?'<div class="status"><i></i>Действует</div>'
       :L.status==="revoked"?'<div class="status no"><i></i>Отозвана</div>'
       :'<div class="status no"><i></i>Не выдана</div>';
-    return '<div class="doc gun">'+
-      '<div><div class="kind">Лицензия на оружие · ст. 6</div>'+
+    return '<div class="doc gun"><div><div class="kind">Лицензия на оружие · ст. 6</div>'+
       '<div class="who">'+esc(doc.nick)+'</div>'+
-      '<div class="sub">'+(L.status==="active"?"TACZ · разрешено ношение":"ношение запрещено")+'</div>'+
-      st+'</div>'+
-      '<img class="skin" src="'+skinBody(doc.nick)+'" alt="">'+
-      '<div class="foot"><div class="no"><small>Номер</small>'+esc(L.number||"—")+'</div>'+
-      '<div class="live"><b class="clk">'+c.t+'</b>'+c.d+'</div></div></div>';
+      '<div class="sub">'+(L.status==="active"?"TACZ · ношение разрешено":"ношение запрещено")+'</div>'+
+      st+'</div>'+skin+
+      '<div class="foot"><div class="no"><small>Номер</small>'+esc(L.number||"—")+'</div>'+live+'</div></div>';
   }
-  return '<div class="doc tax">'+
-    '<div><div class="kind">Налоговый номер</div>'+
+  return '<div class="doc tax"><div><div class="kind">Налоговый номер</div>'+
     '<div class="who">'+esc(doc.nick)+'</div>'+
     '<div class="sub">'+(doc.card?"карта "+esc(doc.card.num):"карта не открыта")+'</div>'+
-    '<div class="status"><i></i>'+(doc.card&&doc.card.fines?"есть неоплаченные штрафы: "+doc.card.fines:"задолженностей нет")+'</div></div>'+
-    '<img class="skin" src="'+skinBody(doc.nick)+'" alt="">'+
-    '<div class="foot"><div class="no"><small>Номер плательщика</small>'+esc(doc.taxNo)+'</div>'+
-    '<div class="live"><b class="clk">'+liveClock().t+'</b>'+liveClock().d+'</div></div></div>';
+    '<div class="status'+(doc.card&&doc.card.fines?" no":"")+'"><i></i>'+
+    (doc.card&&doc.card.fines?"неоплаченных штрафов: "+doc.card.fines:"задолженностей нет")+'</div></div>'+skin+
+    '<div class="foot"><div class="no"><small>Номер плательщика</small>'+esc(doc.taxNo)+'</div>'+live+'</div></div>';
 }
-function row(k,v,cls){
-  return '<div class="row"><div class="k">'+k+'</div><div class="v'+(v?"":" empty")+'">'+(v||"не указано")+'</div></div>';
-}
+const row=(k,v)=>'<div class="row"><div class="k">'+k+'</div><div class="v'+(v?"":" empty")+'">'+(v||"не указано")+'</div></div>';
+
 function render(){
   if(!doc)return;
   $("cardBox").innerHTML=cardHTML();
   $("cardBox").querySelectorAll("img").forEach(im=>im.onerror=()=>{im.style.display="none"});
   clearInterval(clockTimer);
-  clockTimer=setInterval(()=>{
-    const el=document.querySelector(".doc .clk");if(el)el.textContent=liveClock().t;
-  },1000);
+  clockTimer=setInterval(()=>{const el=document.querySelector(".doc .clk");if(el)el.textContent=liveClock().t},1000);
 
   const L=doc.license||{status:"none"};
   if(tab==="pass"){
@@ -361,8 +441,7 @@ function render(){
       row("Город проживания",esc(doc.city))+
       row("Занятие",esc(doc.job))+
       row("Статус",doc.verified?'<span class="badge ok">Подтверждён</span>':'<span class="badge wait">На проверке</span>')+
-      row("Выдан",esc(doc.issued))+
-      row("Обновлён",esc(doc.updatedAt));
+      row("Выдан",esc(doc.issued))+row("Обновлён",esc(doc.updatedAt));
     $("editBox").style.display="block";
   }else if(tab==="gun"){
     $("dataTitle").textContent="Лицензия на оружие";
@@ -371,8 +450,7 @@ function render(){
       row("Владелец","<b>"+esc(doc.nick)+"</b>")+
       row("Статус",L.status==="active"?'<span class="badge ok">Действует</span>'
         :L.status==="revoked"?'<span class="badge no">Отозвана</span>':'<span class="badge no">Не выдана</span>')+
-      row("Номер лицензии",esc(L.number))+
-      row("Выдана",esc(L.issuedAt))+
+      row("Номер лицензии",esc(L.number))+row("Выдана",esc(L.issuedAt))+
       row("Действует до",esc(L.until)||"бессрочно")+
       row("Что разрешает",L.status==="active"?"Ношение и хранение оружия TACZ":"Ничего — оружие подлежит изъятию");
     $("editBox").style.display="none";
@@ -408,7 +486,8 @@ $("doAdm").onclick=async()=>{
   try{
     const code=$("aCode").value;
     const j=await api("admin_list",{code});
-    admCode=code;mem.set("adm",code);$("admLock").style.display="none";$("admBody").style.display="block";
+    admCode=code;mem.set("adm",code);
+    $("admLock").style.display="none";$("admBody").style.display="block";
     paint(j.people);say(m,"","");$("aCode").value="";
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
@@ -439,6 +518,7 @@ function paint(people){
       '<select><option value="none">Без лицензии</option><option value="active">Лицензия действует</option>'+
       '<option value="revoked">Отозвана</option></select>'+
       '<button class="mini gone">Удалить</button>';
+    el.querySelectorAll("img").forEach(im=>im.onerror=()=>{im.style.visibility="hidden"});
     const sel=el.querySelector("select");
     sel.value=(p.license&&p.license.status)||"none";
     const [bVer,bDel]=el.querySelectorAll("button");
@@ -459,10 +539,11 @@ function paint(people){
       try{const j=await api("admin_delete",{code:admCode,nick:p.nick});say($("mAct"),j.note,"ok");admRefresh()}
       catch(e){say($("mAct"),e.message,"err");bDel.disabled=false;bDel.textContent="Удалить";armed=false}
     };
-    el.querySelectorAll("img").forEach(im=>im.onerror=()=>{im.style.visibility="hidden"});
     box.appendChild(el);
   });
 }
+
+openLock();
 </script>
 </body>
 </html>

@@ -100,7 +100,6 @@ export default async (req) => {
     const p = state.people[k] || blank(r.card.nick);
     const cut = (v, n) => String(v || "").trim().slice(0, n);
     const bd = cut(body.birthDate, 10);
-    if (bd && !/^\d{2}\.\d{2}\.\d{4}$/.test(bd)) return bad("Дата рождения в формате ДД.ММ.ГГГГ.");
     const changed = p.birthDate !== bd || p.birthPlace !== cut(body.birthPlace, 40) || p.city !== cut(body.city, 40);
     p.birthDate = bd;
     p.birthPlace = cut(body.birthPlace, 40);
