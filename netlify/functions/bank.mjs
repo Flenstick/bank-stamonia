@@ -44,7 +44,7 @@ function pub(c) {
   return {
     nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked,
     log: c.log.slice(0, 30), since: c.since,
-    avatar: c.avatar || "", bio: c.bio || "",
+    avatar: c.avatar || "", bio: c.bio || "", dis: c.dis || "", discordId: c.discordId || "",
     fines: (c.fines || []).filter((f) => !f.paid)
   };
 }
@@ -61,23 +61,55 @@ function auth(state, nick, pin) {
 }
 const int = (v) => Math.floor(Number(v));
 
-async function notify(title, desc, fields, color) {
+async function notify(title, desc, fields, color, opts) {
   const url = process.env.DISCORD_WEBHOOK;
   if (!url) return;
+  const o = opts || {};
   try {
-    await fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        username: "Банк Стамонии",
-        allowed_mentions: { parse: [] },
-        embeds: [{
-          title, description: desc || "", color: color || 0x2e9b2c, fields: fields || [],
-          footer: { text: "Государственный банк СФ" }, timestamp: new Date().toISOString()
-        }]
-      })
-    });
+    const body = {
+      username: "Банк Стамонии",
+      allowed_mentions: { parse: [], users: (o.mentions || []).slice(0, 25) },
+      embeds: [{
+        title, description: desc || "", color: color || 0x2e9b2c, fields: fields || [],
+        footer: { text: "Государственный банк СФ" }, timestamp: new Date().toISOString()
+      }]
+    };
+    if (o.content) body.content = o.content;
+    await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   } catch (_) { /* банк работает и без Discord */ }
+}
+
+/* — день зарплаты: объявление, когда время пришло — */
+const tzOf = (p) => Number(p.tz || 0);
+function paydayMs(p) {
+  if (!p || !p.next) return NaN;
+  const base = Date.parse(p.next.length === 16 ? p.next + ":00Z" : p.next + "Z");
+  return isNaN(base) ? NaN : base + tzOf(p) * 60000;
+}
+function msToInput(ms, tz) {
+  const d = new Date(ms - tz * 60000), p = (n) => String(n).padStart(2, "0");
+  return d.getUTCFullYear() + "-" + p(d.getUTCMonth() + 1) + "-" + p(d.getUTCDate()) + "T" + p(d.getUTCHours()) + ":" + p(d.getUTCMinutes());
+}
+async function checkPayday(state) {
+  const p = state.settings && state.settings.payday;
+  if (!p || !p.next) return false;
+  let t = paydayMs(p);
+  if (isNaN(t) || t > Date.now()) return false;
+
+  const ids = Object.values(state.cards).map((c) => c.discordId).filter(Boolean).slice(0, 25);
+  await notify("День зарплаты", p.note || "Казна выплачивает жалование гражданам.", [
+    { name: "Когда", value: "прямо сейчас", inline: true },
+    { name: "Следующая", value: p.periodDays ? "через " + p.periodDays + " дн." : "не запланирована", inline: true }
+  ], 0x3dbe38, {
+    content: (ids.map((i) => "<@" + i + ">").join(" ") + " **Сегодня день зарплаты**").trim(),
+    mentions: ids
+  });
+
+  const per = (p.periodDays || 0) * 86400000;
+  if (per > 0) { while (t <= Date.now()) t += per; p.next = msToInput(t, tzOf(p)); }
+  else p.next = "";
+  await persist(state);
+  return true;
 }
 
 /* ————— обработчик ————— */
@@ -88,6 +120,7 @@ export default async (req) => {
   try { body = await req.json(); } catch { return bad("Битый запрос"); }
   const a = body.action;
   const state = await load();
+  await checkPayday(state);
 
   /* — открыть карту — */
   if (a === "register") {
@@ -96,18 +129,17 @@ export default async (req) => {
     const pin = String(body.pin || "").trim();
     if (nick.length < 3 || nick.length > 32) return bad("Ник от 3 до 32 символов.");
     if (!/^[A-Za-z0-9_\-]+$/.test(nick)) return bad("В нике только латиница, цифры, _ и -.");
-    if (!dis) return bad("Укажите Discord.");
     if (!/^\d{4}$/.test(pin)) return bad("ПИН — ровно 4 цифры.");
     if (state.cards[norm(nick)]) return bad("Карта на этот ник уже открыта.");
 
-    const card = { nick, dis, pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "", fines: [] };
+    const card = { nick, dis, discordId: String(body.discordId || "").replace(/\D/g, "").slice(0, 20), pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "", fines: [] };
     log(card, "★", "Карта открыта", "Добро пожаловать в банк", 0, "mon", 0);
     state.cards[norm(nick)] = card;
     await persist(state);
     await notify("Открыта карта", null, [
       { name: "Игрок", value: nick, inline: true },
       { name: "Карта", value: "`" + card.num + "`", inline: true },
-      { name: "Discord", value: "`" + dis + "`", inline: true }
+      { name: "Discord", value: dis ? "`" + dis + "`" : "не указан", inline: true }
     ]);
     return ok({ card: pub(card) });
   }
@@ -153,6 +185,8 @@ export default async (req) => {
     if (av && !/^(data:image\/|https:\/\/)/.test(av)) return bad("Неверная картинка.");
     c.avatar = av;
     c.bio = String(body.bio || "").trim().slice(0, 60);
+    if (body.discordId !== undefined) c.discordId = String(body.discordId).replace(/\D/g, "").slice(0, 20);
+    if (body.dis) c.dis = String(body.dis).trim().slice(0, 40);
     await persist(state);
     return ok({ card: pub(c), note: "Профиль сохранён." });
   }
@@ -231,6 +265,11 @@ export default async (req) => {
       note = "Обменяно: " + money(amt) + " Алтын → " + money(amt * RATE) + " МОН.";
     }
     await persist(state);
+    await notify("Обмен валют", null, [
+      { name: "Игрок", value: c.nick + "\n`" + c.num + "`", inline: true },
+      { name: "Операция", value: note, inline: false },
+      { name: "Стало", value: money(c.mon) + " МОН · " + money(c.alt) + " Алтын", inline: true }
+    ], 0xe3c35a);
     return ok({ card: pub(c), note });
   }
 
@@ -271,8 +310,12 @@ export default async (req) => {
     await notify("Выписан штраф", reason, [
       { name: "Игрок", value: c.nick + "\n`" + c.num + "`", inline: true },
       { name: "Статья", value: article ? "ст. " + article : "без статьи", inline: true },
-      { name: "Сумма", value: "**" + money(amt) + " " + cn + "**", inline: true }
-    ], 0xff6b5e);
+      { name: "Сумма", value: "**" + money(amt) + " " + cn + "**", inline: true },
+      { name: "Как оплатить", value: "Банк → вкладка «Штрафы» → «Оплатить»" }
+    ], 0xff6b5e, c.discordId ? {
+      content: "<@" + c.discordId + "> вам выписан штраф на **" + money(amt) + " " + cn + "**" + (article ? " по ст. " + article : ""),
+      mentions: [c.discordId]
+    } : { content: "**" + c.nick + "** — вам выписан штраф на " + money(amt) + " " + cn });
     return ok({ note: "Штраф " + money(amt) + " " + cn + " выписан игроку " + c.nick + "." });
   }
 
@@ -295,8 +338,15 @@ export default async (req) => {
     if (!isTreasurer()) return bad("Неверный код казначея.", 401);
     const next = String(body.next || "").slice(0, 20);
     const per = Math.max(0, Math.min(365, int(body.periodDays) || 0));
-    state.settings.payday = { next, periodDays: per, note: String(body.note || "").trim().slice(0, 60) };
+    const tz = Math.max(-840, Math.min(840, int(body.tz) || 0));
+    state.settings.payday = { next, periodDays: per, note: String(body.note || "").trim().slice(0, 60), tz };
     await persist(state);
+    if (next) {
+      await notify("День зарплаты назначен", state.settings.payday.note || null, [
+        { name: "Когда", value: next.replace("T", " в "), inline: true },
+        { name: "Повтор", value: per ? "каждые " + per + " дн." : "разово", inline: true }
+      ], 0x3dbe38);
+    }
     return ok({ note: next ? "День зарплаты установлен." : "Таймер зарплаты выключен.", settings: state.settings });
   }
 
@@ -364,6 +414,17 @@ export default async (req) => {
       { name: "Остаток на момент закрытия", value: money(snapshot.mon) + " МОН · " + money(snapshot.alt) + " Алтын", inline: false }
     ], 0xff6b5e);
     return ok({ note: "Карта " + snapshot.nick + " закрыта. Теперь он может открыть новую." });
+  }
+
+  if (a === "tre_setid") {
+    if (!isTreasurer()) return bad("Неверный код казначея.", 401);
+    const c = find(state, body.target);
+    if (!c) return bad("Карта не найдена.");
+    const id = String(body.discordId || "").replace(/\D/g, "").slice(0, 20);
+    c.discordId = id;
+    if (body.dis) c.dis = String(body.dis).trim().slice(0, 40);
+    await persist(state);
+    return ok({ note: id ? "Discord привязан к карте " + c.nick + " — банк будет его отмечать." : "Привязка Discord убрана у " + c.nick + "." });
   }
 
   if (a === "tre_reset_pin") {

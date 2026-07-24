@@ -41,6 +41,15 @@ h1 em{font-style:normal;color:var(--green)}
 label.lbl{display:block;font-size:12.5px;color:var(--muted);margin-bottom:7px}
 input,select{width:100%;font:inherit;font-size:15px;color:var(--text);background:var(--p2);
   border:1px solid transparent;border-radius:13px;padding:13px 15px;outline:0;transition:.15s}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;margin:0}
+input[type=datetime-local]::-webkit-calendar-picker-indicator{filter:invert(.65) sepia(.4) saturate(4) hue-rotate(60deg);cursor:pointer}
+.sum-field{position:relative}
+.sum-field input{padding-right:64px}
+.sum-field .unit{position:absolute;right:15px;top:50%;transform:translateY(-50%);pointer-events:none;
+  font-family:var(--m);font-size:12.5px;color:var(--dim);letter-spacing:.06em}
+.sum-field input:focus~.unit{color:var(--green)}
 input::placeholder{color:var(--dim)}
 input:focus,select:focus{border-color:var(--green);background:var(--p1)}
 input.pin{font-family:var(--m);letter-spacing:.45em}
@@ -220,6 +229,30 @@ input.pin{font-family:var(--m);letter-spacing:.45em}
 .lock-switch:hover{color:var(--green)}
 .remember{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);cursor:pointer;margin-top:14px}
 .remember input{width:17px;height:17px;accent-color:var(--green);flex:none}
+/* ——— свайп для оплаты ——— */
+.swipe{position:relative;height:60px;border-radius:999px;background:var(--p1);overflow:hidden;
+  user-select:none;touch-action:none;cursor:grab;outline:0}
+.swipe:focus-visible{box-shadow:0 0 0 2px var(--green)}
+.swipe .fill{position:absolute;left:0;top:0;bottom:0;width:58px;background:rgba(61,190,56,.16);transition:width .2s cubic-bezier(.2,.9,.3,1)}
+.swipe .txt{position:absolute;inset:0;display:grid;place-items:center;padding-left:34px;
+  font-size:14.5px;color:var(--muted);pointer-events:none}
+.swipe .knob{position:absolute;top:5px;left:5px;width:50px;height:50px;border-radius:50%;background:var(--green);
+  display:grid;place-items:center;transition:left .2s cubic-bezier(.2,.9,.3,1)}
+.swipe .knob svg{width:23px;height:23px;stroke:#08130A;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .2s}
+.swipe.drag{cursor:grabbing}
+.swipe.drag .knob,.swipe.drag .fill{transition:none}
+.swipe.busy{cursor:default}
+.swipe.busy .knob svg{transform:rotate(45deg)}
+.swipe.done{background:rgba(61,190,56,.22)}
+.swipe.done .txt{color:var(--green);font-weight:700}
+.swipe.fail{background:rgba(255,107,94,.14)}
+.swipe.fail .txt{color:var(--red)}
+.swipe.small{height:50px}
+.swipe.small .knob{width:40px;height:40px;top:5px;left:5px}
+.swipe.small .fill{width:48px}
+.swipe.small .txt{font-size:13.5px;padding-left:28px}
+.fine .swipe{flex-basis:100%}
 footer{padding:24px 26px 40px}
 .fbar{max-width:1180px;margin:0 auto;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between;
   font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim)}
@@ -285,7 +318,7 @@ footer{padding:24px 26px 40px}
       <p class="sub">Бесплатно, стартовый баланс — 0.</p>
       <div class="stack">
         <div><label class="lbl" for="rNick">Ник в Minecraft</label><input type="text" id="rNick" maxlength="32" autocomplete="off" placeholder="Steve"></div>
-        <div><label class="lbl" for="rDis">Discord</label><input type="text" id="rDis" maxlength="40" autocomplete="off" placeholder="username"></div>
+        <div><label class="lbl" for="rDis">Discord · необязательно</label><input type="text" id="rDis" maxlength="40" autocomplete="off" placeholder="username"></div>
         <div><label class="lbl" for="rPin">Придумайте ПИН</label><input type="password" id="rPin" class="pin" inputmode="numeric" maxlength="4" placeholder="••••"></div>
         <button class="btn" id="doReg">Открыть карту</button>
       </div>
@@ -354,10 +387,10 @@ footer{padding:24px 26px 40px}
         <div><label class="lbl" for="tTo">Кому</label><input type="text" id="tTo" maxlength="32" placeholder="ник или СФ 1234 5678"></div>
         <div class="two">
           <div><label class="lbl" for="tCur">Валюта</label><select id="tCur"><option value="mon">МОН</option><option value="alt">Алтын</option></select></div>
-          <div><label class="lbl" for="tAmt">Сумма</label><input type="number" id="tAmt" min="1" step="1" placeholder="0"></div>
+          <div><label class="lbl" for="tAmt">Сумма</label><div class="sum-field"><input type="number" id="tAmt" min="1" step="1" placeholder="0"><span class="unit" id="uTAmt">МОН</span></div></div>
         </div>
         <div><label class="lbl" for="tMsg">За что</label><input type="text" id="tMsg" maxlength="60" placeholder="за 2 стака железа"></div>
-        <button class="btn" id="doSend">Перевести</button>
+        <div class="swipe" id="swSend"></div>
       </div>
       <p class="msg" id="mSend"></p>
     </div>
@@ -374,8 +407,8 @@ footer{padding:24px 26px 40px}
       <p class="sub">Номер и сумму возьмите из квитанции налоговой службы.</p>
       <div class="stack">
         <div><label class="lbl" for="xNo">Номер квитанции</label><input type="text" id="xNo" maxlength="24" placeholder="НС-202607-1234"></div>
-        <div><label class="lbl" for="xAmt">Сумма в МОН</label><input type="number" id="xAmt" min="1" step="1" placeholder="0"></div>
-        <button class="btn" id="doTax">Оплатить в казну</button>
+        <div><label class="lbl" for="xAmt">Сумма налога</label><div class="sum-field"><input type="number" id="xAmt" min="1" step="1" placeholder="0"><span class="unit">МОН</span></div></div>
+        <div class="swipe" id="swTax"></div>
       </div>
       <p class="hint">Налоговая получит подтверждение, а в истории карты останется чек.</p>
       <p class="msg" id="mTax"></p>
@@ -387,8 +420,8 @@ footer{padding:24px 26px 40px}
       <div class="stack">
         <div><label class="lbl" for="eDir">Направление</label>
           <select id="eDir"><option value="m2a">МОН → Алтын</option><option value="a2m">Алтын → МОН</option></select></div>
-        <div><label class="lbl" for="eAmt">Сколько меняем</label><input type="number" id="eAmt" min="1" step="1" placeholder="0"></div>
-        <button class="btn" id="doEx">Обменять</button>
+        <div><label class="lbl" for="eAmt">Сколько меняем</label><div class="sum-field"><input type="number" id="eAmt" min="1" step="1" placeholder="0"><span class="unit" id="uEAmt">МОН</span></div></div>
+        <div class="swipe" id="swEx"></div>
       </div>
       <p class="hint" id="exPreview">Получите: —</p>
       <p class="hint">МОН — алмазно-глубинный сланец. Алтын — изумрудно-глубинный сланец, монета покрупнее.</p>
@@ -418,6 +451,9 @@ footer{padding:24px 26px 40px}
         </div>
         <div><label class="lbl" for="profBioIn">Статус · до 60 символов</label>
           <input type="text" id="profBioIn" maxlength="60" placeholder="министр финансов · строю ратушу"></div>
+        <div><label class="lbl" for="profDid">Discord ID · необязательно</label>
+          <input type="text" id="profDid" maxlength="20" inputmode="numeric" placeholder="например 402931857293148160">
+          <p class="hint">Заполняйте, только если хотите, чтобы банк отмечал вас в Discord при штрафах и зарплате. Настройки разработчика в Discord → правой кнопкой по своему нику → «Копировать ID пользователя».</p></div>
         <button class="btn" id="doProf">Сохранить профиль</button>
       </div>
       <p class="msg" id="mProf"></p>
@@ -462,7 +498,7 @@ footer{padding:24px 26px 40px}
           <option value="add">Начислить</option><option value="sub">Списать</option><option value="set">Выставить точно</option>
         </select></div>
         <div><label class="lbl" for="aCur">Валюта</label><select id="aCur"><option value="mon">МОН</option><option value="alt">Алтын</option></select></div>
-        <div><label class="lbl" for="aAmt">Сумма</label><input type="number" id="aAmt" min="0" step="1" placeholder="100"></div>
+        <div><label class="lbl" for="aAmt">Сумма</label><div class="sum-field"><input type="number" id="aAmt" min="0" step="1" placeholder="100"><span class="unit" id="uAAmt">МОН</span></div></div>
         <div style="grid-column:span 2"><label class="lbl" for="aWhy">Основание</label><input type="text" id="aWhy" maxlength="60" placeholder="зарплата за неделю"></div>
       </div>
       <button class="btn" style="margin-top:16px;max-width:260px" id="doIssue">Провести операцию</button>
@@ -476,11 +512,23 @@ footer{padding:24px 26px 40px}
         <div><label class="lbl" for="fNick">Карта игрока</label><input type="text" id="fNick" maxlength="32" placeholder="ник или номер"></div>
         <div><label class="lbl" for="fArt">Статья кодекса</label><select id="fArt"></select></div>
         <div><label class="lbl" for="fCur">Валюта</label><select id="fCur"><option value="mon">МОН</option><option value="alt">Алтын</option></select></div>
-        <div><label class="lbl" for="fAmt">Сумма штрафа</label><input type="number" id="fAmt" min="1" step="1" placeholder="32"></div>
+        <div><label class="lbl" for="fAmt">Сумма штрафа</label><div class="sum-field"><input type="number" id="fAmt" min="1" step="1" placeholder="32"><span class="unit" id="uFAmt">МОН</span></div></div>
         <div style="grid-column:span 2"><label class="lbl" for="fWhy">За что</label><input type="text" id="fWhy" maxlength="80" placeholder="взорвал стену ратуши"></div>
       </div>
       <button class="btn" style="margin-top:16px;max-width:260px" id="doFine">Выписать штраф</button>
       <p class="msg" id="mFineTre"></p>
+    </div>
+
+    <div class="sect">
+      <h2>Привязать Discord</h2>
+      <p class="sub">Чтобы банк отмечал игрока при штрафах и в день зарплаты. Игроку вводить ничего не нужно.</p>
+      <div class="grid2">
+        <div><label class="lbl" for="idNick">Карта игрока</label><input type="text" id="idNick" maxlength="32" placeholder="ник или номер"></div>
+        <div><label class="lbl" for="idVal">Discord ID</label><input type="text" id="idVal" maxlength="20" inputmode="numeric" placeholder="402931857293148160"></div>
+      </div>
+      <button class="btn" style="margin-top:16px;max-width:260px" id="doSetId">Привязать</button>
+      <p class="hint">Пустое поле ID убирает привязку. ID берётся так: в Discord включите настройки разработчика, правой кнопкой по игроку → «Копировать ID пользователя».</p>
+      <p class="msg" id="mSetId"></p>
     </div>
 
     <div class="sect">
@@ -494,7 +542,7 @@ footer{padding:24px 26px 40px}
       <p class="sub">Таймер увидят все игроки. Деньги начисляете вручную.</p>
       <div class="grid3">
         <div><label class="lbl" for="pdNext">Ближайшая выплата</label><input type="datetime-local" id="pdNext"></div>
-        <div><label class="lbl" for="pdPer">Повтор · дней</label><input type="number" id="pdPer" min="0" max="365" step="1" placeholder="7"></div>
+        <div><label class="lbl" for="pdPer">Повтор</label><div class="sum-field"><input type="number" id="pdPer" min="0" max="365" step="1" placeholder="7"><span class="unit">дней</span></div></div>
         <div><label class="lbl" for="pdNoteIn">Подпись</label><input type="text" id="pdNoteIn" maxlength="60" placeholder="зарплата госслужащим"></div>
       </div>
       <button class="btn" style="margin-top:16px;max-width:260px" id="doPayday">Сохранить</button>
@@ -605,6 +653,7 @@ function render(){
   $("profBio").textContent=card.bio||"статус не задан";
   $("profSince").textContent="карта открыта "+(card.since||"—");
   if(document.activeElement!==$("profBioIn"))$("profBioIn").value=card.bio||"";
+  if(document.activeElement!==$("profDid"))$("profDid").value=card.discordId||"";
   const old=$("plastic").querySelector(".blocked-tag");if(old)old.remove();
   if(card.blocked){const b=document.createElement("div");b.className="blocked-tag";b.textContent="карта заблокирована";$("plastic").appendChild(b)}
   $("logList").innerHTML=card.log&&card.log.length?card.log.map(o=>
@@ -631,15 +680,19 @@ function drawFines(){
     const d=document.createElement("div");d.className="fine";
     d.innerHTML='<div class="body"><div class="art">'+(f.article?"Статья "+esc(f.article):"Без статьи")+'</div>'+
       '<div class="why">'+esc(f.reason)+'</div><div class="at">выписан '+esc(f.at||"")+'</div></div>'+
-      '<div class="sum">'+money(f.amount)+' '+cn+'</div><button class="pay">Оплатить</button>';
-    d.querySelector("button").onclick=async e=>{
-      const b=e.target;b.disabled=true;b.textContent="Платим…";
-      try{
-        const j=await api("pay_fine",Object.assign({},auth,{id:f.id}));
-        card=j.card;render();say($("mFine"),j.note,"ok");
-      }catch(err){say($("mFine"),err.message,"err");b.disabled=false;b.textContent="Оплатить"}
-    };
+      '<div class="sum">'+money(f.amount)+' '+cn+'</div><div class="swipe small"></div>';
     box.appendChild(d);
+    makeSwipe(d.querySelector(".swipe"),{
+      label:"Проведите, чтобы оплатить "+money(f.amount)+" "+cn,
+      sending:"Платим…",done:"Штраф погашен",
+      run:async()=>{
+        try{
+          const j=await api("pay_fine",Object.assign({},auth,{id:f.id}));
+          say($("mFine"),j.note,"ok");
+          setTimeout(()=>{card=j.card;render()},1100);
+        }catch(err){say($("mFine"),err.message,"err");throw err}
+      }
+    });
   });
 }
 
@@ -671,37 +724,102 @@ function drawPayday(){
   tick();pdTimer=setInterval(tick,1000);
 }
 
+/* — свайп-подтверждение — */
+const ROCKET='<svg viewBox="0 0 24 24"><path d="M12 3c2.6 2.2 4 5.2 4 8.4L12 16l-4-4.6C8 8.2 9.4 5.2 12 3z"/>'+
+  '<path d="M8 13.5 5.5 19l4-2"/><path d="M16 13.5 18.5 19l-4-2"/><circle cx="12" cy="9" r="1.5"/></svg>';
+function makeSwipe(host,opts){
+  host.tabIndex=0;host.setAttribute("role","button");host.setAttribute("aria-label",opts.label);
+  host.innerHTML='<div class="fill"></div><div class="txt">'+opts.label+'</div><div class="knob">'+ROCKET+'</div>';
+  const fill=host.querySelector(".fill"),txt=host.querySelector(".txt"),knob=host.querySelector(".knob");
+  let x=0,max=0,startX=0,dragging=false,busy=false;
+  const pad=5;
+  const put=v=>{x=Math.max(0,Math.min(max,v));knob.style.left=(pad+x)+"px";fill.style.width=(pad*2+x+knob.offsetWidth)+"px"};
+  const measure=()=>{max=host.clientWidth-knob.offsetWidth-pad*2};
+  const reset=(cls)=>{
+    busy=false;host.classList.remove("busy","done","fail");
+    if(cls)host.classList.add(cls);
+    txt.textContent=cls==="done"?(opts.done||"Готово"):opts.label;
+    measure();put(0);
+    if(cls)setTimeout(()=>{host.classList.remove(cls);txt.textContent=opts.label},1400);
+  };
+  async function fire(){
+    if(busy)return;
+    busy=true;host.classList.add("busy");measure();put(max);
+    txt.textContent=opts.sending||"Отправляем…";
+    try{await opts.run();host.classList.remove("busy");host.classList.add("done");
+      txt.textContent=opts.done||"Готово";
+      setTimeout(()=>reset(),1300);
+    }catch(_){host.classList.remove("busy");reset("fail")}
+  }
+  host.addEventListener("pointerdown",e=>{
+    if(busy)return;
+    measure();dragging=true;startX=e.clientX-x;
+    host.classList.add("drag");host.setPointerCapture(e.pointerId);
+  });
+  host.addEventListener("pointermove",e=>{if(dragging)put(e.clientX-startX)});
+  const end=()=>{
+    if(!dragging)return;dragging=false;host.classList.remove("drag");
+    if(x>=max*0.85)fire();else put(0);
+  };
+  host.addEventListener("pointerup",end);
+  host.addEventListener("pointercancel",end);
+  host.addEventListener("keydown",e=>{
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();fire()}
+    if(e.key==="ArrowRight"){measure();put(x+max/4)}
+    if(e.key==="ArrowLeft")put(x-max/4);
+  });
+  measure();put(0);
+  return{reset:()=>reset()};
+}
+
 /* — операции игрока — */
-$("doSend").onclick=async()=>{
-  const m=$("mSend"),b=$("doSend");b.disabled=true;say(m,"Отправляем…");
-  try{
-    const j=await api("transfer",Object.assign({},auth,{to:$("tTo").value,cur:$("tCur").value,
-      amount:$("tAmt").value,msg:$("tMsg").value}));
-    card=j.card;render();say(m,j.note,"ok");$("tAmt").value="";$("tMsg").value="";
-  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
-};
-$("doTax").onclick=async()=>{
-  const m=$("mTax"),b=$("doTax");b.disabled=true;say(m,"Проводим платёж…");
-  try{
-    const j=await api("tax",Object.assign({},auth,{receipt:$("xNo").value,amount:$("xAmt").value}));
-    card=j.card;render();say(m,j.note,"ok");$("xNo").value="";$("xAmt").value="";
-  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
-};
+makeSwipe($("swSend"),{
+  label:"Проведите ракету, чтобы отправить",sending:"Отправляем перевод…",done:"Перевод отправлен",
+  run:async()=>{
+    const m=$("mSend");say(m,"Отправляем…");
+    try{
+      const j=await api("transfer",Object.assign({},auth,{to:$("tTo").value,cur:$("tCur").value,
+        amount:$("tAmt").value,msg:$("tMsg").value}));
+      card=j.card;render();say(m,j.note,"ok");$("tAmt").value="";$("tMsg").value="";
+    }catch(e){say(m,e.message,"err");throw e}
+  }
+});
+makeSwipe($("swTax"),{
+  label:"Проведите, чтобы оплатить налог",sending:"Проводим платёж…",done:"Налог оплачен",
+  run:async()=>{
+    const m=$("mTax");say(m,"Проводим платёж…");
+    try{
+      const j=await api("tax",Object.assign({},auth,{receipt:$("xNo").value,amount:$("xAmt").value}));
+      card=j.card;render();say(m,j.note,"ok");$("xNo").value="";$("xAmt").value="";
+    }catch(e){say(m,e.message,"err");throw e}
+  }
+});
+makeSwipe($("swEx"),{
+  label:"Проведите, чтобы обменять",sending:"Меняем…",done:"Обмен выполнен",
+  run:async()=>{
+    const m=$("mEx");say(m,"Меняем…");
+    try{
+      const j=await api("exchange",Object.assign({},auth,{dir:$("eDir").value,amount:$("eAmt").value}));
+      card=j.card;render();say(m,j.note,"ok");exPreview();
+    }catch(e){say(m,e.message,"err");throw e}
+  }
+});
 function exPreview(){
   const dir=$("eDir").value,a=Math.floor(+$("eAmt").value||0);
   const got=dir==="m2a"?Math.floor(a/RATE):a*RATE;
   $("exPreview").textContent=a?"Получите: "+money(got)+" "+(dir==="m2a"?"Алтын":"МОН")
     +(dir==="m2a"&&a%RATE?" · сдача "+money(a%RATE)+" МОН останется на карте":""):"Получите: —";
 }
-$("eDir").onchange=exPreview;$("eAmt").oninput=exPreview;
-$("doEx").onclick=async()=>{
-  const m=$("mEx"),b=$("doEx");b.disabled=true;say(m,"Меняем…");
-  try{
-    const j=await api("exchange",Object.assign({},auth,{dir:$("eDir").value,amount:$("eAmt").value}));
-    card=j.card;render();say(m,j.note,"ok");exPreview();
-  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
-};
-
+$("eDir").onchange=()=>{units();exPreview()};$("eAmt").oninput=exPreview;
+function units(){
+  const cn=v=>v==="alt"?"АЛТ":"МОН";
+  $("uTAmt").textContent=cn($("tCur").value);
+  $("uEAmt").textContent=$("eDir").value==="m2a"?"МОН":"АЛТ";
+  $("uAAmt").textContent=cn($("aCur").value);
+  $("uFAmt").textContent=cn($("fCur").value);
+}
+["tCur","aCur","fCur"].forEach(id=>$(id).addEventListener("change",units));
+units();
 /* — профиль — */
 let pendingAva=null;
 $("avaFile").onclick=()=>$("avaInput").click();
@@ -735,7 +853,8 @@ $("doProf").onclick=async()=>{
   const m=$("mProf"),b=$("doProf");b.disabled=true;say(m,"Сохраняем…");
   try{
     const j=await api("profile",Object.assign({},auth,{
-      avatar:pendingAva===null?(card.avatar||""):pendingAva,bio:$("profBioIn").value}));
+      avatar:pendingAva===null?(card.avatar||""):pendingAva,bio:$("profBioIn").value,
+      discordId:$("profDid").value}));
     card=j.card;pendingAva=null;render();say(m,j.note,"ok");
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
@@ -870,11 +989,18 @@ $("doFine").onclick=async()=>{
     say(m,j.note,"ok");$("fAmt").value="";$("fWhy").value="";treRefresh();if(auth)refresh();
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
+$("doSetId").onclick=async()=>{
+  const m=$("mSetId"),b=$("doSetId");b.disabled=true;say(m,"Сохраняем…");
+  try{
+    const j=await api("tre_setid",{code:treCode,target:$("idNick").value,discordId:$("idVal").value});
+    say(m,j.note,"ok");$("idVal").value="";treRefresh();if(auth)refresh();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
 $("doPayday").onclick=async()=>{
   const m=$("mPayday"),b=$("doPayday");b.disabled=true;say(m,"Сохраняем…");
   try{
     const j=await api("tre_payday",{code:treCode,next:$("pdNext").value,
-      periodDays:$("pdPer").value,note:$("pdNoteIn").value});
+      periodDays:$("pdPer").value,note:$("pdNoteIn").value,tz:new Date().getTimezoneOffset()});
     settings=j.settings;say(m,j.note,"ok");if(auth)drawPayday();
   }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
 };
