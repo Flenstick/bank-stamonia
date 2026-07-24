@@ -181,6 +181,27 @@ td .ava,td .ava-ph{width:26px;height:26px;font-size:12px;display:inline-grid;ver
 .payday .unit span{font-size:10px;color:var(--muted)}
 .payday .note{font-size:13px;color:var(--muted);margin:9px 0 0}
 .cur-note{font-size:12.5px;color:#5A6A5C;margin:8px 0 0;line-height:1.45}
+/* ——— штрафы ——— */
+.fine{background:rgba(255,107,94,.07);border:1px solid rgba(255,107,94,.3);border-radius:12px;
+  padding:14px 15px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.fine .body{flex:1;min-width:180px}
+.fine .art{font-family:var(--m);font-size:11px;color:var(--alarm);text-transform:uppercase;letter-spacing:.12em}
+.fine .why{font-size:15px;font-weight:600;margin-top:2px}
+.fine .at{font-family:var(--m);font-size:11px;color:var(--muted);margin-top:3px}
+.fine .sum{font-family:var(--m);font-size:18px;font-weight:700;color:var(--alarm);white-space:nowrap}
+.fine .pay{font:inherit;font-size:13.5px;font-weight:700;background:var(--green);color:#06120E;border:0;
+  border-radius:9px;padding:9px 15px;cursor:pointer;white-space:nowrap}
+.fine .pay:hover{filter:brightness(1.08)}
+.fine .pay:disabled{background:#2C3A2D;color:#7B8B7C;cursor:not-allowed}
+.fine.small{padding:11px 13px}
+.fine.small .why{font-size:14px}
+.tab .badge{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;margin-left:7px;
+  border-radius:999px;background:var(--alarm);color:#0A0F0B;font-size:11px;font-weight:800;font-family:var(--m)}
+.tab.on .badge{background:#06120E;color:var(--green)}
+.debt{background:rgba(255,107,94,.1);border:1px solid rgba(255,107,94,.32);border-radius:13px;
+  padding:13px 15px;margin-top:12px}
+.debt .lab{font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.15em;color:var(--alarm)}
+.debt .amt{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
 footer{border-top:1px solid var(--line-soft);padding:20px}
 .fbar{max-width:1080px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;
   font-family:var(--m);font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted)}
@@ -281,6 +302,10 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
         </div>
         <p class="note" id="pdNote"></p>
       </div>
+      <div class="debt" id="debtBox" style="display:none">
+        <div class="lab">Неоплаченные штрафы</div>
+        <div class="amt" id="debtAmt">0</div>
+      </div>
       <div class="sync"><i></i><span id="syncTxt">синхронизировано</span></div>
       <button class="btn ghost" style="margin-top:12px" id="doLogout">Выйти из карты</button>
     </div>
@@ -288,6 +313,7 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
     <div>
       <div class="tabs">
         <button class="tab on" data-pane="pSend">Перевод</button>
+        <button class="tab" data-pane="pFine">Штрафы<span class="badge" id="fineBadge" style="display:none">0</span></button>
         <button class="tab" data-pane="pTax">Налоги</button>
         <button class="tab" data-pane="pEx">Обмен</button>
         <button class="tab" data-pane="pProf">Профиль</button>
@@ -308,6 +334,13 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
             <button class="btn" id="doSend">Перевести</button>
           </div>
           <p class="msg" id="mSend"></p>
+        </div>
+
+        <div class="pane" id="pFine">
+          <h2>Штрафы</h2>
+          <p class="sub">Выписывает казна по решению суда. Оплата списывается с карты сразу.</p>
+          <div id="fineList"><p class="empty">Штрафов нет — вы чисты перед Федерацией.</p></div>
+          <p class="msg" id="mFine"></p>
         </div>
 
         <div class="pane" id="pTax">
@@ -411,6 +444,26 @@ footer{border-top:1px solid var(--line-soft);padding:20px}
       </div>
       <button class="btn" style="margin-top:13px" id="doIssue">Провести операцию</button>
       <p class="msg" id="mIssue"></p>
+    </div>
+
+    <div class="card-box">
+      <h2>Выписать штраф</h2>
+      <p class="sub">Штраф повиснет на карте игрока, пока он его не погасит. Деньги спишутся с его баланса при оплате.</p>
+      <div class="row">
+        <div><label class="lbl" for="fNick">Карта игрока</label><input type="text" id="fNick" maxlength="32" placeholder="ник или номер карты"></div>
+        <div><label class="lbl" for="fArt">Статья кодекса</label><select id="fArt"></select></div>
+        <div><label class="lbl" for="fCur">Валюта</label><select id="fCur"><option value="mon">МОН</option><option value="alt">Алтын</option></select></div>
+        <div><label class="lbl" for="fAmt">Сумма штрафа</label><input type="number" id="fAmt" min="1" step="1" placeholder="32"></div>
+        <div class="wide"><label class="lbl" for="fWhy">За что</label><input type="text" id="fWhy" maxlength="80" placeholder="взорвал стену ратуши"></div>
+      </div>
+      <button class="btn" style="margin-top:13px" id="doFine">Выписать штраф</button>
+      <p class="msg" id="mFineTre"></p>
+    </div>
+
+    <div class="card-box">
+      <h2>Неоплаченные штрафы</h2>
+      <p class="sub">Всё, что висит на игроках прямо сейчас.</p>
+      <div id="treFines"><p class="empty">Долгов нет.</p></div>
     </div>
 
     <div class="card-box">
@@ -550,7 +603,38 @@ function render(){
     '<div class="op"><div class="ic">'+o.ic+'</div><div class="t"><b>'+esc(o.title)+'</b><span>'+esc(o.sub)+' · '+o.at+'</span></div>'+
     (o.sign?'<div class="a '+(o.sign>0?"plus":"minus")+'">'+(o.sign>0?"+":"−")+money(o.amt)+' '+(o.cur==="mon"?"МОН":"АЛТ")+'</div>':'')+
     '</div>').join(""):'<p class="empty">Операций пока нет.</p>';
+  drawFines();
   drawPayday();
+}
+
+/* — штрафы игрока — */
+function drawFines(){
+  const list=card.fines||[],box=$("fineList"),badge=$("fineBadge");
+  badge.style.display=list.length?"inline-grid":"none";badge.textContent=list.length;
+  const debt=$("debtBox");
+  if(list.length){
+    const mon=list.filter(f=>f.cur!=="alt").reduce((s,f)=>s+f.amount,0);
+    const alt=list.filter(f=>f.cur==="alt").reduce((s,f)=>s+f.amount,0);
+    debt.style.display="block";
+    $("debtAmt").textContent=[mon?money(mon)+" МОН":"",alt?money(alt)+" Алтын":""].filter(Boolean).join(" · ");
+  }else debt.style.display="none";
+  box.innerHTML=list.length?"":'<p class="empty">Штрафов нет — вы чисты перед Федерацией.</p>';
+  list.forEach(f=>{
+    const cn=f.cur==="alt"?"Алтын":"МОН";
+    const d=document.createElement("div");d.className="fine";
+    d.innerHTML='<div class="body"><div class="art">'+(f.article?"Статья "+esc(f.article):"Без статьи")+'</div>'+
+      '<div class="why">'+esc(f.reason)+'</div><div class="at">выписан '+esc(f.at||"")+'</div></div>'+
+      '<div class="sum">'+money(f.amount)+' '+cn+'</div>'+
+      '<button class="pay">Оплатить</button>';
+    d.querySelector("button").onclick=async e=>{
+      const b=e.target;b.disabled=true;b.textContent="Платим…";
+      try{
+        const j=await api("pay_fine",Object.assign({},auth,{id:f.id}));
+        card=j.card;render();say($("mFine"),j.note,"ok");
+      }catch(err){say($("mFine"),err.message,"err");b.disabled=false;b.textContent="Оплатить"}
+    };
+    box.appendChild(d);
+  });
 }
 
 /* — таймер зарплаты — */
@@ -687,9 +771,12 @@ function paint(j){
   }
   const rows=$("cardRows");rows.innerHTML="";
   $("noCards").style.display=j.cards.length?"none":"block";
+  drawTreFines(j.cards);
   j.cards.forEach(c=>{
+    const nf=(c.fines||[]).length;
     const tr=document.createElement("tr");
-    tr.innerHTML='<td>'+avaHTML(c.avatar,c.nick)+esc(c.nick)+(c.blocked?' <span style="color:var(--alarm);font-size:12px">блок</span>':'')+'</td>'+
+    tr.innerHTML='<td>'+avaHTML(c.avatar,c.nick)+esc(c.nick)+(c.blocked?' <span style="color:var(--alarm);font-size:12px">блок</span>':'')+
+      (nf?' <span style="color:var(--alarm);font-size:12px">штрафов: '+nf+'</span>':'')+'</td>'+
       '<td class="num">'+c.num+'</td><td class="mon">'+money(c.mon)+'</td><td class="alt">'+money(c.alt)+'</td>'+
       '<td style="text-align:right;white-space:nowrap">'+
         '<button class="mini">'+(c.blocked?"Разблокировать":"Заблокировать")+'</button> '+
@@ -718,6 +805,48 @@ function paint(j){
     rows.appendChild(tr);
   });
 }
+/* — штрафы: казна — */
+const ARTICLES=[
+  ["","без статьи"],["1","Ст. 1 · Гриферство"],["2","Ст. 2 · Разрушение баз"],["3","Ст. 3 · Кража ресурсов"],
+  ["4","Ст. 4 · Мошенничество"],["5","Ст. 5 · Вандализм"],["6","Ст. 6 · Оружие без лицензии"],
+  ["7","Ст. 7 · Оборот оружия"],["8","Ст. 8 · Изготовление оружия"],["9","Ст. 9 · Минирование домов"],
+  ["10","Ст. 10 · Пересечение границы"],["11","Ст. 11 · Наркотики"],["12","Ст. 12 · Нацистская символика"],
+  ["14","Ст. 14 · Беспричинный килл"],["15","Ст. 15 · Правила войны"],["16","Ст. 16 · Дюп"],
+  ["17","Ст. 17 · Обман в торговле"],["18","Ст. 18 · Нечестное ПО"],["19","Ст. 19 · Чужие моды"],
+  ["20","Ст. 20 · Токсичность"],["21","Ст. 21 · Спам и реклама"],["24","Ст. 24 · Соучастие"]
+];
+ARTICLES.forEach(([v,t])=>{
+  const o=document.createElement("option");o.value=v;o.textContent=t;$("fArt").appendChild(o);
+});
+$("doFine").onclick=async()=>{
+  const m=$("mFineTre"),b=$("doFine");b.disabled=true;say(m,"Выписываем…");
+  try{
+    const j=await api("tre_fine",{code:treCode,target:$("fNick").value,amount:$("fAmt").value,
+      cur:$("fCur").value,article:$("fArt").value,reason:$("fWhy").value});
+    say(m,j.note,"ok");$("fAmt").value="";$("fWhy").value="";treRefresh();if(auth)refresh();
+  }catch(e){say(m,e.message,"err")}finally{b.disabled=false}
+};
+function drawTreFines(cards){
+  const box=$("treFines");box.innerHTML="";
+  const rows=[];
+  cards.forEach(c=>(c.fines||[]).forEach(f=>rows.push([c,f])));
+  if(!rows.length){box.innerHTML='<p class="empty">Долгов нет.</p>';return}
+  rows.forEach(([c,f])=>{
+    const cn=f.cur==="alt"?"Алтын":"МОН";
+    const d=document.createElement("div");d.className="fine small";
+    d.innerHTML='<div class="body"><div class="art">'+esc(c.nick)+(f.article?" · ст. "+esc(f.article):"")+'</div>'+
+      '<div class="why">'+esc(f.reason)+'</div><div class="at">выписан '+esc(f.at||"")+'</div></div>'+
+      '<div class="sum">'+money(f.amount)+' '+cn+'</div>'+
+      '<button class="mini del">Отменить</button>';
+    d.querySelector("button").onclick=async e=>{
+      const btn=e.target;btn.disabled=true;btn.textContent="…";
+      try{await api("tre_fine_cancel",{code:treCode,target:c.nick,id:f.id});treRefresh();if(auth)refresh()}
+      catch(err){say($("mFineTre"),err.message,"err");btn.disabled=false;btn.textContent="Отменить"}
+    };
+    box.appendChild(d);
+  });
+}
+
 $("doIssue").onclick=async()=>{
   const m=$("mIssue"),b=$("doIssue");b.disabled=true;say(m,"Проводим…");
   try{

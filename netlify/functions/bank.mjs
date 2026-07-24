@@ -44,9 +44,11 @@ function pub(c) {
   return {
     nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked,
     log: c.log.slice(0, 30), since: c.since,
-    avatar: c.avatar || "", bio: c.bio || ""
+    avatar: c.avatar || "", bio: c.bio || "",
+    fines: (c.fines || []).filter((f) => !f.paid)
   };
 }
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 function log(card, ic, title, sub, amt, cur, sign) {
   card.log.unshift({ ic, title, sub, amt, cur, sign, at: stamp() });
   card.log = card.log.slice(0, 30);
@@ -98,7 +100,7 @@ export default async (req) => {
     if (!/^\d{4}$/.test(pin)) return bad("ПИН — ровно 4 цифры.");
     if (state.cards[norm(nick)]) return bad("Карта на этот ник уже открыта.");
 
-    const card = { nick, dis, pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "" };
+    const card = { nick, dis, pinHash: hash(pin), num: cardNumber(state), mon: 0, alt: 0, blocked: false, log: [], since: stamp(), avatar: "", bio: "", fines: [] };
     log(card, "★", "Карта открыта", "Добро пожаловать в банк", 0, "mon", 0);
     state.cards[norm(nick)] = card;
     await persist(state);
@@ -115,6 +117,30 @@ export default async (req) => {
     const r = auth(state, body.nick, body.pin);
     if (r.err) return bad(r.err, 401);
     return ok({ card: pub(r.card), settings: state.settings });
+  }
+
+  /* — оплата штрафа — */
+  if (a === "pay_fine") {
+    const r = auth(state, body.nick, body.pin);
+    if (r.err) return bad(r.err, 401);
+    const c = r.card;
+    c.fines = c.fines || [];
+    const f = c.fines.find((x) => x.id === String(body.id) && !x.paid);
+    if (!f) return bad("Штраф не найден или уже оплачен.");
+    const cur = f.cur === "alt" ? "alt" : "mon";
+    const cn = cur === "mon" ? "МОН" : "Алтын";
+    if (c[cur] < f.amount) return bad("Не хватает средств: нужно " + money(f.amount) + " " + cn + ".");
+    c[cur] -= f.amount;
+    f.paid = true; f.paidAt = stamp();
+    c.fines = c.fines.filter((x) => !x.paid);
+    log(c, "⚖", "Штраф оплачен", f.article ? "ст. " + f.article + " · " + f.reason : f.reason, f.amount, cur, -1);
+    await persist(state);
+    await notify("Штраф оплачен", f.reason || null, [
+      { name: "Игрок", value: c.nick + "\n`" + c.num + "`", inline: true },
+      { name: "Статья", value: f.article ? "ст. " + f.article : "без статьи", inline: true },
+      { name: "Сумма", value: "**" + money(f.amount) + " " + cn + "**", inline: true }
+    ], 0xe3c35a);
+    return ok({ card: pub(c), note: "Штраф погашен: " + money(f.amount) + " " + cn + "." });
   }
 
   /* — профиль — */
@@ -215,7 +241,8 @@ export default async (req) => {
   if (a === "tre_list") {
     if (!isTreasurer()) return bad("Неверный код казначея.", 401);
     const all = Object.values(state.cards).map((c) => ({
-      nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked, avatar: c.avatar || ""
+      nick: c.nick, num: c.num, mon: c.mon, alt: c.alt, blocked: !!c.blocked, avatar: c.avatar || "",
+      fines: (c.fines || []).filter((f) => !f.paid)
     }));
     return ok({
       cards: all.sort((x, y) => y.mon - x.mon),
@@ -223,6 +250,44 @@ export default async (req) => {
       totalAlt: all.reduce((s, c) => s + c.alt, 0),
       settings: state.settings
     });
+  }
+
+  /* — штрафы — */
+  if (a === "tre_fine") {
+    if (!isTreasurer()) return bad("Неверный код казначея.", 401);
+    const c = find(state, body.target);
+    const amt = int(body.amount);
+    const cur = body.cur === "alt" ? "alt" : "mon";
+    const cn = cur === "mon" ? "МОН" : "Алтын";
+    const article = String(body.article || "").trim().slice(0, 8);
+    const reason = String(body.reason || "").trim().slice(0, 80);
+    if (!c) return bad("Карта не найдена.");
+    if (!(amt >= 1)) return bad("Сумма штрафа должна быть больше нуля.");
+    if (!reason) return bad("Укажите, за что штраф.");
+    c.fines = c.fines || [];
+    c.fines.push({ id: newId(), amount: amt, cur, article, reason, at: stamp(), paid: false });
+    log(c, "!", "Выписан штраф", article ? "ст. " + article + " · " + reason : reason, amt, cur, 0);
+    await persist(state);
+    await notify("Выписан штраф", reason, [
+      { name: "Игрок", value: c.nick + "\n`" + c.num + "`", inline: true },
+      { name: "Статья", value: article ? "ст. " + article : "без статьи", inline: true },
+      { name: "Сумма", value: "**" + money(amt) + " " + cn + "**", inline: true }
+    ], 0xff6b5e);
+    return ok({ note: "Штраф " + money(amt) + " " + cn + " выписан игроку " + c.nick + "." });
+  }
+
+  if (a === "tre_fine_cancel") {
+    if (!isTreasurer()) return bad("Неверный код казначея.", 401);
+    const c = find(state, body.target);
+    if (!c) return bad("Карта не найдена.");
+    c.fines = c.fines || [];
+    const before = c.fines.length;
+    c.fines = c.fines.filter((f) => f.id !== String(body.id));
+    if (c.fines.length === before) return bad("Штраф не найден.");
+    log(c, "✎", "Штраф отменён", "решение казны", 0, "mon", 0);
+    await persist(state);
+    await notify("Штраф отменён", null, [{ name: "Игрок", value: c.nick, inline: true }], 0x3dbe38);
+    return ok({ note: "Штраф отменён." });
   }
 
   /* — день зарплаты — */
